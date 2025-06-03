@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -25,8 +26,26 @@ export default {
 				background: 'hsl(var(--background))',
 				foreground: 'hsl(var(--foreground))',
 				primary: {
-					DEFAULT: 'hsl(var(--primary))',
+					100: '#2C3E50',
+					200: '#57687c',
+					300: '#b4c7dd',
+					DEFAULT: '#2C3E50',
 					foreground: 'hsl(var(--primary-foreground))'
+				},
+				accent: {
+					100: '#F7CAC9',
+					200: '#926b6a',
+					DEFAULT: '#F7CAC9',
+					foreground: 'hsl(var(--accent-foreground))'
+				},
+				text: {
+					100: '#333333',
+					200: '#5c5c5c'
+				},
+				bg: {
+					100: '#F2F2F2',
+					200: '#e8e8e8',
+					300: '#bfbfbf'
 				},
 				secondary: {
 					DEFAULT: 'hsl(var(--secondary))',
@@ -39,10 +58,6 @@ export default {
 				muted: {
 					DEFAULT: 'hsl(var(--muted))',
 					foreground: 'hsl(var(--muted-foreground))'
-				},
-				accent: {
-					DEFAULT: 'hsl(var(--accent))',
-					foreground: 'hsl(var(--accent-foreground))'
 				},
 				popover: {
 					DEFAULT: 'hsl(var(--popover))',
@@ -84,11 +99,31 @@ export default {
 					to: {
 						height: '0'
 					}
+				},
+				'glow': {
+					'0%, 100%': {
+						boxShadow: '0 0 5px rgba(247, 202, 201, 0.3)'
+					},
+					'50%': {
+						boxShadow: '0 0 20px rgba(247, 202, 201, 0.6), 0 0 30px rgba(247, 202, 201, 0.4)'
+					}
+				},
+				'slide-up': {
+					'0%': {
+						transform: 'translateY(10px)',
+						opacity: '0'
+					},
+					'100%': {
+						transform: 'translateY(0)',
+						opacity: '1'
+					}
 				}
 			},
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
-				'accordion-up': 'accordion-up 0.2s ease-out'
+				'accordion-up': 'accordion-up 0.2s ease-out',
+				'glow': 'glow 2s ease-in-out infinite',
+				'slide-up': 'slide-up 0.3s ease-out'
 			}
 		}
 	},
