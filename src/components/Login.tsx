@@ -1,19 +1,82 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Eye, EyeOff, Lock, Mail } from 'lucide-react';
+import { Eye, EyeOff, Lock, Mail, AlertCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { toast } from 'sonner';
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
     email: '',
     password: ''
   });
+  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  
+  const navigate = useNavigate();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const validateForm = () => {
+    const newErrors: { email?: string; password?: string } = {};
+    
+    if (!formData.email) {
+      newErrors.email = 'Email is required';
+    } else if (!/\S+@\S+\.\S+/.test(formData.email)) {
+      newErrors.email = 'Email is invalid';
+    }
+    
+    if (!formData.password) {
+      newErrors.password = 'Password is required';
+    } else if (formData.password.length < 6) {
+      newErrors.password = 'Password must be at least 6 characters';
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const mockLogin = async (email: string, password: string) => {
+    // Mock API call
+    return new Promise<{ success: boolean; token?: string; message?: string }>((resolve) => {
+      setTimeout(() => {
+        if (email === 'admin@legaltech.pro' && password === 'password') {
+          resolve({ 
+            success: true, 
+            token: 'mock-jwt-token-12345'
+          });
+        } else {
+          resolve({ 
+            success: false, 
+            message: 'Invalid email or password'
+          });
+        }
+      }, 1500);
+    });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', formData);
-    // Handle login logic here
+    
+    if (!validateForm()) return;
+    
+    setIsLoading(true);
+    
+    try {
+      const result = await mockLogin(formData.email, formData.password);
+      
+      if (result.success && result.token) {
+        localStorage.setItem('authToken', result.token);
+        localStorage.setItem('userEmail', formData.email);
+        toast.success('Login successful! Welcome back.');
+        navigate('/');
+      } else {
+        toast.error(result.message || 'Login failed');
+      }
+    } catch (error) {
+      toast.error('Something went wrong. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const containerVariants = {
@@ -51,6 +114,7 @@ const Login = () => {
           </motion.div>
           <h1 className="text-3xl font-bold text-white mb-2">Welcome Back</h1>
           <p className="text-primary-300">Sign in to your LegalTech Pro account</p>
+          <p className="text-sm text-primary-300 mt-2">Demo: admin@legaltech.pro / password</p>
         </motion.div>
 
         {/* Login Form */}
@@ -70,10 +134,17 @@ const Login = () => {
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-transparent transition-all duration-200"
+                  className={`w-full pl-10 pr-4 py-3 bg-white/10 border rounded-lg text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-transparent transition-all duration-200 ${
+                    errors.email ? 'border-red-400' : 'border-white/20'
+                  }`}
                   placeholder="Enter your email"
-                  required
                 />
+                {errors.email && (
+                  <div className="flex items-center mt-1 text-red-400 text-xs">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {errors.email}
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -88,9 +159,10 @@ const Login = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-                  className="w-full pl-10 pr-12 py-3 bg-white/10 border border-white/20 rounded-lg text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-transparent transition-all duration-200"
+                  className={`w-full pl-10 pr-12 py-3 bg-white/10 border rounded-lg text-white placeholder-primary-300 focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-transparent transition-all duration-200 ${
+                    errors.password ? 'border-red-400' : 'border-white/20'
+                  }`}
                   placeholder="Enter your password"
-                  required
                 />
                 <button
                   type="button"
@@ -99,6 +171,12 @@ const Login = () => {
                 >
                   {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                 </button>
+                {errors.password && (
+                  <div className="flex items-center mt-1 text-red-400 text-xs">
+                    <AlertCircle className="w-3 h-3 mr-1" />
+                    {errors.password}
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -122,21 +200,26 @@ const Login = () => {
               whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(247, 202, 201, 0.3)" }}
               whileTap={{ scale: 0.98 }}
               type="submit"
-              className="w-full bg-accent-100 text-primary-100 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg"
+              disabled={isLoading}
+              className="w-full bg-accent-100 text-primary-100 py-3 rounded-lg font-semibold transition-all duration-200 shadow-lg disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
             >
-              Sign In
+              {isLoading ? (
+                <div className="w-5 h-5 border-2 border-primary-100 border-t-transparent rounded-full animate-spin"></div>
+              ) : (
+                'Sign In'
+              )}
             </motion.button>
 
-            {/* Demo Access */}
+            {/* Create Account */}
             <motion.div variants={itemVariants} className="text-center">
-              <p className="text-primary-300 text-sm mb-3">Need access? Contact your administrator</p>
+              <p className="text-primary-300 text-sm mb-3">Don't have an account?</p>
               <motion.button
                 whileHover={{ scale: 1.02 }}
                 whileTap={{ scale: 0.98 }}
                 type="button"
                 className="text-accent-100 hover:text-accent-200 text-sm font-medium transition-colors duration-200"
               >
-                Request Demo Account
+                Create Account
               </motion.button>
             </motion.div>
           </form>
