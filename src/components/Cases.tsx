@@ -1,487 +1,347 @@
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Plus, Eye, Edit, Trash2, Calendar, User, X, FileText } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { toast } from 'sonner';
-
-interface Case {
-  id: string;
-  name: string;
-  client: string;
-  status: 'active' | 'pending' | 'closed' | 'on-hold';
-  priority: 'high' | 'medium' | 'low';
-  dateCreated: string;
-  lastUpdated: string;
-  description: string;
-  tags: string[];
-}
-
-interface CaseFormData {
-  name: string;
-  client: string;
-  status: Case['status'];
-  priority: Case['priority'];
-  description: string;
-  tags: string[];
-}
+import { Search, Filter, Plus, Calendar, User, FileText, MoreHorizontal, AlertCircle } from 'lucide-react';
 
 const Cases = () => {
-  const [cases, setCases] = useState<Case[]>([]);
-  const [filteredCases, setFilteredCases] = useState<Case[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
-  const [isLoading, setIsLoading] = useState(true);
-  const [showNewCaseModal, setShowNewCaseModal] = useState(false);
-  const [editingCase, setEditingCase] = useState<Case | null>(null);
-  const [showCaseDetail, setShowCaseDetail] = useState<Case | null>(null);
+  const [filterStatus, setFilterStatus] = useState('All');
+  const [selectedCase, setSelectedCase] = useState<number | null>(null);
 
-  const [newCaseForm, setNewCaseForm] = useState<CaseFormData>({
-    name: '',
-    client: '',
-    status: 'active',
-    priority: 'medium',
-    description: '',
-    tags: []
-  });
-
-  const statusColors = {
-    active: 'bg-green-100 text-green-800 border-green-200',
-    pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-    closed: 'bg-gray-100 text-gray-800 border-gray-200',
-    'on-hold': 'bg-red-100 text-red-800 border-red-200'
-  };
-
-  const priorityColors = {
-    high: 'bg-red-100 text-red-800',
-    medium: 'bg-yellow-100 text-yellow-800',
-    low: 'bg-green-100 text-green-800'
-  };
-
-  // Mock data
-  const mockCases: Case[] = [
+  const cases = [
     {
-      id: '1',
-      name: 'Johnson vs. ABC Corp',
-      client: 'Michael Johnson',
-      status: 'active',
-      priority: 'high',
-      dateCreated: '2024-01-15',
-      lastUpdated: '2024-01-20',
-      description: 'Employment discrimination lawsuit against ABC Corporation.',
-      tags: ['employment', 'discrimination', 'corporate']
+      id: 1,
+      caseNumber: 'CASE-2024-001',
+      client: 'Johnson Corporation',
+      title: 'Contract Dispute Resolution',
+      type: 'Corporate Law',
+      status: 'Active',
+      priority: 'High',
+      assignedTo: 'Sarah Wilson',
+      nextHearing: '2024-01-15',
+      lastUpdate: '2 hours ago',
+      description: 'Dispute over breach of contract terms in software licensing agreement.',
+      progress: 65
     },
     {
-      id: '2',
-      name: 'Smith Family Trust',
-      client: 'Sarah Smith',
-      status: 'pending',
-      priority: 'medium',
-      dateCreated: '2024-01-10',
-      lastUpdated: '2024-01-18',
-      description: 'Estate planning and trust setup for the Smith family.',
-      tags: ['estate', 'trust', 'family']
+      id: 2,
+      caseNumber: 'CASE-2024-002',
+      client: 'Smith Holdings',
+      title: 'Employment Discrimination Case',
+      type: 'Employment Law',
+      status: 'Pending Review',
+      priority: 'Medium',
+      assignedTo: 'Michael Chen',
+      nextHearing: '2024-01-22',
+      lastUpdate: '1 day ago',
+      description: 'Allegations of workplace discrimination and wrongful termination.',
+      progress: 40
     },
     {
-      id: '3',
-      name: 'Wilson Contract Dispute',
-      client: 'David Wilson',
-      status: 'active',
-      priority: 'low',
-      dateCreated: '2024-01-05',
-      lastUpdated: '2024-01-19',
-      description: 'Commercial contract dispute resolution.',
-      tags: ['contract', 'commercial', 'dispute']
+      id: 3,
+      caseNumber: 'CASE-2024-003',
+      client: 'Tech Innovations Ltd',
+      title: 'Patent Infringement Defense',
+      type: 'Intellectual Property',
+      status: 'Discovery',
+      priority: 'High',
+      assignedTo: 'Emily Rodriguez',
+      nextHearing: '2024-01-18',
+      lastUpdate: '3 hours ago',
+      description: 'Defense against patent infringement claims on AI technology.',
+      progress: 75
+    },
+    {
+      id: 4,
+      caseNumber: 'CASE-2024-004',
+      client: 'Green Energy Solutions',
+      title: 'Regulatory Compliance Review',
+      type: 'Environmental Law',
+      status: 'Completed',
+      priority: 'Low',
+      assignedTo: 'David Park',
+      nextHearing: 'N/A',
+      lastUpdate: '1 week ago',
+      description: 'Environmental compliance audit and regulatory filings.',
+      progress: 100
+    },
+    {
+      id: 5,
+      caseNumber: 'CASE-2024-005',
+      client: 'Metropolitan Bank',
+      title: 'Financial Fraud Investigation',
+      type: 'Criminal Defense',
+      status: 'Investigation',
+      priority: 'High',
+      assignedTo: 'Lisa Thompson',
+      nextHearing: '2024-01-20',
+      lastUpdate: '6 hours ago',
+      description: 'Investigation of alleged financial fraud and money laundering.',
+      progress: 30
     }
   ];
 
-  useEffect(() => {
-    const loadCases = async () => {
-      setIsLoading(true);
-      // Simulate API call
-      setTimeout(() => {
-        setCases(mockCases);
-        setFilteredCases(mockCases);
-        setIsLoading(false);
-      }, 1000);
-    };
-
-    loadCases();
-  }, []);
-
-  useEffect(() => {
-    let filtered = cases;
-
-    // Filter by search term
-    if (searchTerm) {
-      filtered = filtered.filter(
-        (case_) =>
-          case_.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          case_.client.toLowerCase().includes(searchTerm.toLowerCase())
-      );
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'Active': return 'bg-green-100 text-green-800 border-green-200';
+      case 'Pending Review': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'Discovery': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'Investigation': return 'bg-purple-100 text-purple-800 border-purple-200';
+      case 'Completed': return 'bg-gray-100 text-gray-800 border-gray-200';
+      default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
-
-    // Filter by status
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter((case_) => case_.status === statusFilter);
-    }
-
-    setFilteredCases(filtered);
-  }, [cases, searchTerm, statusFilter]);
-
-  const handleCreateCase = () => {
-    if (!newCaseForm.name || !newCaseForm.client) {
-      toast.error('Please fill in all required fields');
-      return;
-    }
-
-    const newCase: Case = {
-      id: Date.now().toString(),
-      ...newCaseForm,
-      dateCreated: new Date().toISOString().split('T')[0],
-      lastUpdated: new Date().toISOString().split('T')[0]
-    };
-
-    setCases([newCase, ...cases]);
-    setNewCaseForm({
-      name: '',
-      client: '',
-      status: 'active',
-      priority: 'medium',
-      description: '',
-      tags: []
-    });
-    setShowNewCaseModal(false);
-    toast.success('Case created successfully');
   };
 
-  const handleEditCase = (updatedCase: Case) => {
-    setCases(cases.map(c => c.id === updatedCase.id ? { ...updatedCase, lastUpdated: new Date().toISOString().split('T')[0] } : c));
-    setEditingCase(null);
-    toast.success('Case updated successfully');
+  const getPriorityColor = (priority: string) => {
+    switch (priority) {
+      case 'High': return 'text-red-500';
+      case 'Medium': return 'text-yellow-500';
+      case 'Low': return 'text-green-500';
+      default: return 'text-gray-500';
+    }
   };
 
-  const handleDeleteCase = (caseId: string) => {
-    setCases(cases.filter(c => c.id !== caseId));
-    toast.success('Case deleted successfully');
+  const filteredCases = cases.filter(case_item => {
+    const matchesSearch = case_item.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         case_item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         case_item.caseNumber.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesFilter = filterStatus === 'All' || case_item.status === filterStatus;
+    return matchesSearch && matchesFilter;
+  });
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
   };
 
-  const CaseModal = ({ case: caseData, onSave, onClose }: {
-    case?: Case;
-    onSave: (caseData: Case | CaseFormData) => void;
-    onClose: () => void;
-  }) => {
-    const [formData, setFormData] = useState<CaseFormData>(
-      caseData ? {
-        name: caseData.name,
-        client: caseData.client,
-        status: caseData.status,
-        priority: caseData.priority,
-        description: caseData.description,
-        tags: caseData.tags
-      } : newCaseForm
-    );
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      if (caseData) {
-        onSave({ ...caseData, ...formData });
-      } else {
-        onSave(formData);
-      }
-    };
-
-    return (
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4"
-        onClick={(e) => e.target === e.currentTarget && onClose()}
-      >
-        <motion.div
-          initial={{ scale: 0.9, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.9, opacity: 0 }}
-          className="bg-white rounded-xl p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto"
-        >
-          <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold text-text-100">
-              {caseData ? 'Edit Case' : 'New Case'}
-            </h2>
-            <Button variant="ghost" size="icon" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-text-100 mb-1">
-                  Case Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-100 mb-1">
-                  Client Name *
-                </label>
-                <input
-                  type="text"
-                  value={formData.client}
-                  onChange={(e) => setFormData({ ...formData, client: e.target.value })}
-                  className="w-full px-3 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-100 mb-1">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as Case['status'] })}
-                  className="w-full px-3 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-                >
-                  <option value="active">Active</option>
-                  <option value="pending">Pending</option>
-                  <option value="on-hold">On Hold</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-sm font-medium text-text-100 mb-1">
-                  Priority
-                </label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as Case['priority'] })}
-                  className="w-full px-3 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-                >
-                  <option value="low">Low</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High</option>
-                </select>
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-text-100 mb-1">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                rows={4}
-                className="w-full px-3 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-              />
-            </div>
-
-            <div className="flex justify-end space-x-3 pt-4">
-              <Button variant="outline" onClick={onClose}>
-                Cancel
-              </Button>
-              <Button type="submit" className="bg-accent-100 hover:bg-accent-200 text-primary-100">
-                {caseData ? 'Update Case' : 'Create Case'}
-              </Button>
-            </div>
-          </form>
-        </motion.div>
-      </motion.div>
-    );
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
   };
 
   return (
-    <div className="min-h-screen bg-bg-100 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-bg-100 pt-20 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-7xl mx-auto"
+      >
         {/* Header */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-text-100 mb-2">Cases</h1>
-            <p className="text-text-200">Manage and track all your legal cases</p>
-          </div>
-          
-          <Button
-            onClick={() => setShowNewCaseModal(true)}
-            className="bg-accent-100 hover:bg-accent-200 text-primary-100 mt-4 md:mt-0"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            New Case
-          </Button>
-        </div>
-
-        {/* Filters */}
-        <Card className="mb-6">
-          <CardContent className="pt-6">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-200 w-4 h-4" />
-                <input
-                  type="text"
-                  placeholder="Search cases or clients..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-10 pr-4 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-                />
-              </div>
-              
-              <div className="flex items-center space-x-2">
-                <Filter className="w-4 h-4 text-text-200" />
-                <select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  className="px-3 py-2 border border-bg-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100"
-                >
-                  <option value="all">All Status</option>
-                  <option value="active">Active</option>
-                  <option value="pending">Pending</option>
-                  <option value="on-hold">On Hold</option>
-                  <option value="closed">Closed</option>
-                </select>
-              </div>
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-text-100 mb-2">Cases</h1>
+              <p className="text-text-200">Manage and track all your legal cases</p>
             </div>
-          </CardContent>
-        </Card>
+            <motion.button
+              whileHover={{ scale: 1.05, boxShadow: "0 10px 30px rgba(247, 202, 201, 0.3)" }}
+              whileTap={{ scale: 0.95 }}
+              className="mt-4 sm:mt-0 bg-accent-100 text-primary-100 px-6 py-3 rounded-lg font-semibold flex items-center space-x-2 transition-all duration-200"
+            >
+              <Plus className="w-5 h-5" />
+              <span>New Case</span>
+            </motion.button>
+          </div>
+        </motion.div>
 
-        {/* Cases Table */}
-        <Card>
-          <CardContent className="pt-6">
-            {isLoading ? (
-              <div className="space-y-4">
-                {[...Array(5)].map((_, i) => (
-                  <div key={i} className="flex items-center space-x-4 p-4 border-b">
-                    <div className="w-8 h-8 bg-bg-200 rounded animate-pulse"></div>
-                    <div className="flex-1 space-y-2">
-                      <div className="h-4 bg-bg-200 rounded animate-pulse w-1/4"></div>
-                      <div className="h-3 bg-bg-200 rounded animate-pulse w-1/6"></div>
+        {/* Filters and Search */}
+        <motion.div variants={itemVariants} className="bg-white rounded-xl p-6 shadow-sm border border-bg-200 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-200 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search cases by client, title, or case number..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-bg-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-transparent transition-all duration-200"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <select
+                value={filterStatus}
+                onChange={(e) => setFilterStatus(e.target.value)}
+                className="px-4 py-3 border border-bg-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-accent-100 focus:border-transparent transition-all duration-200"
+              >
+                <option value="All">All Status</option>
+                <option value="Active">Active</option>
+                <option value="Pending Review">Pending Review</option>
+                <option value="Discovery">Discovery</option>
+                <option value="Investigation">Investigation</option>
+                <option value="Completed">Completed</option>
+              </select>
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="p-3 border border-bg-200 rounded-lg hover:bg-bg-100 transition-colors duration-200"
+              >
+                <Filter className="w-5 h-5 text-text-200" />
+              </motion.button>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Cases Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 gap-6">
+          <AnimatePresence mode="wait">
+            {filteredCases.map((case_item) => (
+              <motion.div
+                key={case_item.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                whileHover={{ scale: 1.01, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+                className="bg-white rounded-xl p-6 shadow-sm border border-bg-200 cursor-pointer transition-all duration-200"
+                onClick={() => setSelectedCase(selectedCase === case_item.id ? null : case_item.id)}
+              >
+                <div className="flex items-start justify-between">
+                  <div className="flex-1">
+                    <div className="flex items-center space-x-3 mb-3">
+                      <h3 className="text-lg font-semibold text-text-100">{case_item.title}</h3>
+                      <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(case_item.status)}`}>
+                        {case_item.status}
+                      </span>
+                      <div className={`flex items-center ${getPriorityColor(case_item.priority)}`}>
+                        <AlertCircle className="w-4 h-4 mr-1" />
+                        <span className="text-sm font-medium">{case_item.priority}</span>
+                      </div>
                     </div>
-                    <div className="w-20 h-6 bg-bg-200 rounded animate-pulse"></div>
-                    <div className="w-24 h-8 bg-bg-200 rounded animate-pulse"></div>
+                    
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="flex items-center space-x-2">
+                        <User className="w-4 h-4 text-text-200" />
+                        <span className="text-sm text-text-200">Client:</span>
+                        <span className="text-sm font-medium text-text-100">{case_item.client}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <FileText className="w-4 h-4 text-text-200" />
+                        <span className="text-sm text-text-200">Case #:</span>
+                        <span className="text-sm font-medium text-text-100">{case_item.caseNumber}</span>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <Calendar className="w-4 h-4 text-text-200" />
+                        <span className="text-sm text-text-200">Next Hearing:</span>
+                        <span className="text-sm font-medium text-text-100">{case_item.nextHearing}</span>
+                      </div>
+                    </div>
+
+                    <p className="text-text-200 mb-4">{case_item.description}</p>
+
+                    {/* Progress Bar */}
+                    <div className="mb-4">
+                      <div className="flex items-center justify-between mb-2">
+                        <span className="text-sm font-medium text-text-100">Progress</span>
+                        <span className="text-sm text-text-200">{case_item.progress}%</span>
+                      </div>
+                      <div className="w-full bg-bg-200 rounded-full h-2">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${case_item.progress}%` }}
+                          transition={{ duration: 1, delay: 0.5 }}
+                          className="bg-accent-100 h-2 rounded-full"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="flex items-center justify-between text-sm text-text-200">
+                      <span>Assigned to: <span className="font-medium text-text-100">{case_item.assignedTo}</span></span>
+                      <span>Updated {case_item.lastUpdate}</span>
+                    </div>
                   </div>
-                ))}
-              </div>
-            ) : filteredCases.length === 0 ? (
-              <div className="text-center py-12">
-                <FileText className="w-12 h-12 text-text-200 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-text-100 mb-2">No cases found</h3>
-                <p className="text-text-200">Try adjusting your search or filters</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-bg-200">
-                      <th className="text-left py-3 px-4 font-medium text-text-100">Case</th>
-                      <th className="text-left py-3 px-4 font-medium text-text-100">Client</th>
-                      <th className="text-left py-3 px-4 font-medium text-text-100">Status</th>
-                      <th className="text-left py-3 px-4 font-medium text-text-100">Priority</th>
-                      <th className="text-left py-3 px-4 font-medium text-text-100">Updated</th>
-                      <th className="text-left py-3 px-4 font-medium text-text-100">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {filteredCases.map((case_) => (
-                      <motion.tr
-                        key={case_.id}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="border-b border-bg-100 hover:bg-bg-100 transition-colors"
-                      >
-                        <td className="py-4 px-4">
-                          <div>
-                            <div className="font-medium text-text-100">{case_.name}</div>
-                            <div className="text-sm text-text-200 truncate max-w-xs">
-                              {case_.description}
+                  
+                  <motion.button
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                    className="p-2 hover:bg-bg-100 rounded-lg transition-colors duration-200"
+                  >
+                    <MoreHorizontal className="w-5 h-5 text-text-200" />
+                  </motion.button>
+                </div>
+
+                {/* Expanded Details */}
+                <AnimatePresence>
+                  {selectedCase === case_item.id && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="mt-6 pt-6 border-t border-bg-200"
+                    >
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                          <h4 className="font-semibold text-text-100 mb-2">Case Details</h4>
+                          <div className="space-y-2 text-sm">
+                            <div className="flex justify-between">
+                              <span className="text-text-200">Type:</span>
+                              <span className="text-text-100">{case_item.type}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-text-200">Priority:</span>
+                              <span className={getPriorityColor(case_item.priority)}>{case_item.priority}</span>
+                            </div>
+                            <div className="flex justify-between">
+                              <span className="text-text-200">Status:</span>
+                              <span className="text-text-100">{case_item.status}</span>
                             </div>
                           </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center">
-                            <User className="w-4 h-4 text-text-200 mr-2" />
-                            <span className="text-text-100">{case_.client}</span>
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${statusColors[case_.status]}`}>
-                            {case_.status}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${priorityColors[case_.priority]}`}>
-                            {case_.priority}
-                          </span>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center text-text-200">
-                            <Calendar className="w-4 h-4 mr-1" />
-                            {new Date(case_.lastUpdated).toLocaleDateString()}
-                          </div>
-                        </td>
-                        <td className="py-4 px-4">
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setShowCaseDetail(case_)}
-                              className="h-8 w-8"
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-text-100 mb-2">Quick Actions</h4>
+                          <div className="space-y-2">
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              className="w-full text-left px-3 py-2 text-sm bg-bg-100 hover:bg-bg-200 rounded-lg transition-colors duration-200"
                             >
-                              <Eye className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => setEditingCase(case_)}
-                              className="h-8 w-8"
+                              View Documents
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              className="w-full text-left px-3 py-2 text-sm bg-bg-100 hover:bg-bg-200 rounded-lg transition-colors duration-200"
                             >
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteCase(case_.id)}
-                              className="h-8 w-8 text-red-600 hover:text-red-700"
+                              Schedule Meeting
+                            </motion.button>
+                            <motion.button
+                              whileHover={{ scale: 1.02 }}
+                              className="w-full text-left px-3 py-2 text-sm bg-bg-100 hover:bg-bg-200 rounded-lg transition-colors duration-200"
                             >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                              Update Status
+                            </motion.button>
                           </div>
-                        </td>
-                      </motion.tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      </div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </motion.div>
 
-      {/* Modals */}
-      <AnimatePresence>
-        {showNewCaseModal && (
-          <CaseModal
-            onSave={handleCreateCase}
-            onClose={() => setShowNewCaseModal(false)}
-          />
+        {/* Empty State */}
+        {filteredCases.length === 0 && (
+          <motion.div
+            variants={itemVariants}
+            className="text-center py-12"
+          >
+            <FileText className="w-12 h-12 text-text-200 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-text-100 mb-2">No cases found</h3>
+            <p className="text-text-200 mb-6">Try adjusting your search or filter criteria</p>
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              className="bg-accent-100 text-primary-100 px-6 py-3 rounded-lg font-semibold"
+            >
+              Create New Case
+            </motion.button>
+          </motion.div>
         )}
-        
-        {editingCase && (
-          <CaseModal
-            case={editingCase}
-            onSave={(updatedCase) => handleEditCase(updatedCase as Case)}
-            onClose={() => setEditingCase(null)}
-          />
-        )}
-      </AnimatePresence>
+      </motion.div>
     </div>
   );
 };
