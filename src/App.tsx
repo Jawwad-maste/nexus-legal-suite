@@ -9,6 +9,9 @@ import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Cases from "./components/Cases";
+import Calendar from "./components/Calendar";
+import Clients from "./components/Clients";
+import Documents from "./components/Documents";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,9 +28,9 @@ const AppContent = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/" element={<Dashboard />} />
           <Route path="/cases" element={<Cases />} />
-          <Route path="/clients" element={<Dashboard />} />
-          <Route path="/calendar" element={<Dashboard />} />
-          <Route path="/documents" element={<Dashboard />} />
+          <Route path="/calendar" element={<Calendar />} />
+          <Route path="/clients" element={<Clients />} />
+          <Route path="/documents" element={<Documents />} />
           <Route path="/team" element={<Dashboard />} />
           <Route path="/settings" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />

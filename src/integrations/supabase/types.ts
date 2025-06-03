@@ -9,7 +9,109 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      clients: {
+        Row: {
+          age: number | null
+          case_title: string | null
+          created_at: string
+          id: string
+          name: string
+          photo_url: string | null
+        }
+        Insert: {
+          age?: number | null
+          case_title?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          photo_url?: string | null
+        }
+        Update: {
+          age?: number | null
+          case_title?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          photo_url?: string | null
+        }
+        Relationships: []
+      }
+      documents: {
+        Row: {
+          client_id: string
+          file_name: string
+          file_size: number | null
+          file_type: string
+          file_url: string
+          id: string
+          uploaded_at: string
+        }
+        Insert: {
+          client_id: string
+          file_name: string
+          file_size?: number | null
+          file_type: string
+          file_url: string
+          id?: string
+          uploaded_at?: string
+        }
+        Update: {
+          client_id?: string
+          file_name?: string
+          file_size?: number | null
+          file_type?: string
+          file_url?: string
+          id?: string
+          uploaded_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "documents_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      events: {
+        Row: {
+          client_id: string | null
+          created_at: string
+          date: string
+          google_event_id: string | null
+          id: string
+          title: string
+          type: Database["public"]["Enums"]["event_type"]
+        }
+        Insert: {
+          client_id?: string | null
+          created_at?: string
+          date: string
+          google_event_id?: string | null
+          id?: string
+          title: string
+          type: Database["public"]["Enums"]["event_type"]
+        }
+        Update: {
+          client_id?: string | null
+          created_at?: string
+          date?: string
+          google_event_id?: string | null
+          id?: string
+          title?: string
+          type?: Database["public"]["Enums"]["event_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "events_client_id_fkey"
+            columns: ["client_id"]
+            isOneToOne: false
+            referencedRelation: "clients"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
@@ -18,7 +120,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      event_type: "hearing" | "meeting"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -133,6 +235,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      event_type: ["hearing", "meeting"],
+    },
   },
 } as const
