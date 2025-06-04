@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
@@ -8,7 +7,7 @@ import { useDeleteClient } from '@/hooks/useClientOperations';
 import { ClientModal } from '@/components/ClientModal';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Plus, Trash2, Edit } from 'lucide-react';
+import { Plus, Trash2, Edit, Users } from 'lucide-react';
 import { toast } from 'sonner';
 
 const Clients = () => {
