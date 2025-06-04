@@ -9,11 +9,15 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useEvents } from '@/hooks/useEvents';
 import { useClients } from '@/hooks/useClients';
 import { EventModal } from '@/components/EventModal';
+import { EventDetailModal } from '@/components/EventDetailModal';
 import { motion } from 'framer-motion';
 
 const Calendar = () => {
   const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+  const [isEventDetailModalOpen, setIsEventDetailModalOpen] = useState(false);
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [selectedEvent, setSelectedEvent] = useState<any>(null);
+  
   const { data: events = [], isLoading: eventsLoading } = useEvents();
   const { data: clients = [] } = useClients();
 
@@ -26,7 +30,8 @@ const Calendar = () => {
     textColor: 'white',
     extendedProps: {
       type: event.type,
-      client: event.client
+      client: event.client,
+      fullEvent: event
     }
   }));
 
@@ -36,7 +41,9 @@ const Calendar = () => {
   };
 
   const handleEventClick = (arg: any) => {
-    console.log('Event clicked:', arg.event.extendedProps);
+    const fullEvent = arg.event.extendedProps.fullEvent;
+    setSelectedEvent(fullEvent);
+    setIsEventDetailModalOpen(true);
   };
 
   if (eventsLoading) {
@@ -100,10 +107,25 @@ const Calendar = () => {
 
       <EventModal
         isOpen={isEventModalOpen}
-        onClose={() => setIsEventModalOpen(false)}
+        onClose={() => {
+          setIsEventModalOpen(false);
+          setSelectedDate('');
+        }}
         clients={clients}
         selectedDate={selectedDate}
       />
+
+      {selectedEvent && (
+        <EventDetailModal
+          event={selectedEvent}
+          clients={clients}
+          isOpen={isEventDetailModalOpen}
+          onClose={() => {
+            setIsEventDetailModalOpen(false);
+            setSelectedEvent(null);
+          }}
+        />
+      )}
     </motion.div>
   );
 };

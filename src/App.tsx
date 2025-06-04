@@ -1,4 +1,3 @@
-
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -12,6 +11,8 @@ import Cases from "./components/Cases";
 import Calendar from "./components/Calendar";
 import Clients from "./components/Clients";
 import Documents from "./components/Documents";
+import ClientDetail from "./components/ClientDetail";
+import ClientDocuments from "./components/ClientDocuments";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +31,9 @@ const AppContent = () => {
           <Route path="/cases" element={<Cases />} />
           <Route path="/calendar" element={<Calendar />} />
           <Route path="/clients" element={<Clients />} />
+          <Route path="/clients/:clientId" element={<ClientDetail />} />
           <Route path="/documents" element={<Documents />} />
+          <Route path="/documents/:clientId" element={<ClientDocuments />} />
           <Route path="/team" element={<Dashboard />} />
           <Route path="/settings" element={<Dashboard />} />
           <Route path="*" element={<NotFound />} />
