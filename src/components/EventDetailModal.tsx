@@ -28,7 +28,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
     new Date(event.date).toTimeString().slice(0, 5)
   );
   const [type, setType] = useState<'hearing' | 'meeting'>(event.type);
-  const [clientId, setClientId] = useState(event.client_id || '');
+  const [clientId, setClientId] = useState(event.client_id || 'no-client');
 
   const updateEvent = useUpdateEvent();
   const deleteEvent = useDeleteEvent();
@@ -50,7 +50,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
           title,
           type,
           date: eventDate,
-          client_id: clientId || null,
+          client_id: clientId === 'no-client' ? null : clientId,
         }
       });
 
@@ -167,7 +167,7 @@ export const EventDetailModal: React.FC<EventDetailModalProps> = ({
                   <SelectValue placeholder="Select a client (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">No client selected</SelectItem>
+                  <SelectItem value="no-client">No client selected</SelectItem>
                   {clients.map((client) => (
                     <SelectItem key={client.id} value={client.id}>
                       {client.name} - {client.case_title}
