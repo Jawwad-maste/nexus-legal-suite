@@ -150,7 +150,7 @@ const Documents = () => {
                         variant="outline"
                         className="flex items-center space-x-1"
                         onClick={() => {
-                          const link = document.createElement('a');
+                          const link = window.document.createElement('a');
                           link.href = document.file_url;
                           link.download = document.file_name;
                           link.click();

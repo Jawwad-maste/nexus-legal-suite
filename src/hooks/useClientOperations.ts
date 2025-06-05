@@ -84,3 +84,16 @@ export const useDeleteClient = () => {
     },
   });
 };
+
+// Export a combined hook that returns all client operations
+export const useClientOperations = () => {
+  const createClient = useCreateClient();
+  const updateClient = useUpdateClient();
+  const deleteClient = useDeleteClient();
+
+  return {
+    createClient,
+    updateClient,
+    deleteClient,
+  };
+};
