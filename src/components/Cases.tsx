@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Plus, Calendar, User, FileText, MoreHorizontal, AlertCircle, Edit, Trash2 } from 'lucide-react';
@@ -7,25 +6,19 @@ import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'sonner';
+import { Case } from '@/types/database';
+import type { Database } from '@/integrations/supabase/types';
 
-interface Case {
-  id: string;
-  title: string;
-  description: string;
-  status: 'Active' | 'Pending Review' | 'Discovery' | 'Investigation' | 'Completed';
-  priority: 'High' | 'Medium' | 'Low';
-  client_name: string;
-  created_at: string;
-  updated_at: string;
-  user_id: string;
-}
+type CaseRow = Database['public']['Tables']['cases']['Row'];
+type CaseInsert = Database['public']['Tables']['cases']['Insert'];
+type CaseUpdate = Database['public']['Tables']['cases']['Update'];
 
 const Cases = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('All');
   const [selectedCase, setSelectedCase] = useState<string | null>(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCase, setEditingCase] = useState<Case | null>(null);
+  const [editingCase, setEditingCase] = useState<CaseRow | null>(null);
   const { user } = useAuth();
   const queryClient = useQueryClient();
 
@@ -36,24 +29,24 @@ const Cases = () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from('cases' as any)
+        .from('cases')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as Case[];
+      return data as CaseRow[];
     },
     enabled: !!user,
   });
 
   // Create case mutation
   const createCase = useMutation({
-    mutationFn: async (caseData: Omit<Case, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
+    mutationFn: async (caseData: Omit<CaseInsert, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('cases' as any)
+        .from('cases')
         .insert([{
           ...caseData,
           user_id: user.id
@@ -76,9 +69,9 @@ const Cases = () => {
 
   // Update case mutation
   const updateCase = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<Case> & { id: string }) => {
+    mutationFn: async ({ id, ...updates }: Partial<CaseUpdate> & { id: string }) => {
       const { data, error } = await supabase
-        .from('cases' as any)
+        .from('cases')
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -101,7 +94,7 @@ const Cases = () => {
   const deleteCase = useMutation({
     mutationFn: async (caseId: string) => {
       const { error } = await supabase
-        .from('cases' as any)
+        .from('cases')
         .delete()
         .eq('id', caseId);
 
@@ -158,7 +151,7 @@ const Cases = () => {
   };
 
   const CaseForm = ({ case_item, onSubmit, onCancel }: { 
-    case_item?: Case; 
+    case_item?: CaseRow; 
     onSubmit: (data: any) => void; 
     onCancel: () => void; 
   }) => {

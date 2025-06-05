@@ -29,3 +29,15 @@ export interface Document {
   uploaded_at: string;
   client?: Client;
 }
+
+export interface Case {
+  id: string;
+  title: string;
+  description: string;
+  status: 'Active' | 'Pending Review' | 'Discovery' | 'Investigation' | 'Completed';
+  priority: 'High' | 'Medium' | 'Low';
+  client_name: string;
+  created_at: string;
+  updated_at: string;
+  user_id: string;
+}
