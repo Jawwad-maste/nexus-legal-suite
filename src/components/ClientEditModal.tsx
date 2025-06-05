@@ -39,11 +39,9 @@ export const ClientEditModal: React.FC<ClientEditModalProps> = ({
     try {
       await updateClient.mutateAsync({
         id: client.id,
-        updates: {
-          name,
-          age: age ? parseInt(age) : null,
-          case_title: caseTitle || null,
-        }
+        name,
+        age: age ? parseInt(age) : undefined,
+        case_title: caseTitle || undefined,
       });
 
       toast.success('Client updated successfully');

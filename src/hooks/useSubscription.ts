@@ -127,12 +127,22 @@ export const useCurrentCounts = () => {
     queryFn: async () => {
       if (!user) return 0;
       
+      // Get client IDs first, then count documents
+      const { data: clients, error: clientsError } = await supabase
+        .from('clients')
+        .select('id')
+        .eq('user_id', user.id);
+      
+      if (clientsError) throw clientsError;
+      
+      if (!clients || clients.length === 0) return 0;
+      
+      const clientIds = clients.map(client => client.id);
+      
       const { count, error } = await supabase
         .from('documents')
         .select('*', { count: 'exact', head: true })
-        .in('client_id', 
-          supabase.from('clients').select('id').eq('user_id', user.id)
-        );
+        .in('client_id', clientIds);
       
       if (error) throw error;
       return count || 0;
