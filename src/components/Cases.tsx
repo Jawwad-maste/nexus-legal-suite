@@ -36,7 +36,7 @@ const Cases = () => {
       if (!user) return [];
       
       const { data, error } = await supabase
-        .from('cases')
+        .from('cases' as any)
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
@@ -53,7 +53,7 @@ const Cases = () => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
-        .from('cases')
+        .from('cases' as any)
         .insert([{
           ...caseData,
           user_id: user.id
@@ -78,7 +78,7 @@ const Cases = () => {
   const updateCase = useMutation({
     mutationFn: async ({ id, ...updates }: Partial<Case> & { id: string }) => {
       const { data, error } = await supabase
-        .from('cases')
+        .from('cases' as any)
         .update({ ...updates, updated_at: new Date().toISOString() })
         .eq('id', id)
         .select()
@@ -101,7 +101,7 @@ const Cases = () => {
   const deleteCase = useMutation({
     mutationFn: async (caseId: string) => {
       const { error } = await supabase
-        .from('cases')
+        .from('cases' as any)
         .delete()
         .eq('id', caseId);
 
