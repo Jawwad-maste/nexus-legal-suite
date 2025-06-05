@@ -4,13 +4,15 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Plus, Menu, X, Scale } from 'lucide-react';
+import PlanSelectionModal from './PlanSelectionModal';
 
 const LandingPage = () => {
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isPlanModalOpen, setIsPlanModalOpen] = useState(false);
   const navigate = useNavigate();
 
   const handleGetStarted = () => {
-    navigate('/auth');
+    setIsPlanModalOpen(true);
   };
 
   const handlePricing = () => {
@@ -19,6 +21,11 @@ const LandingPage = () => {
 
   const handleLogin = () => {
     navigate('/auth');
+  };
+
+  const handlePlanSelected = (plan: string) => {
+    // After plan selection, user will be redirected to dashboard
+    navigate('/');
   };
 
   return (
@@ -57,7 +64,7 @@ const LandingPage = () => {
                 onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium"
               >
-                7 Days Free Trial
+                Get Started
               </button>
             </div>
 
@@ -104,7 +111,7 @@ const LandingPage = () => {
                     onClick={handleGetStarted}
                     className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition-colors font-medium w-full text-center"
                   >
-                    7 Days Free Trial
+                    Get Started
                   </button>
                 </div>
               </motion.div>
@@ -147,7 +154,7 @@ const LandingPage = () => {
                 onClick={handleGetStarted}
                 className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition-colors shadow-lg"
               >
-                Get Started Free
+                Get Started
               </button>
               <button
                 onClick={handlePricing}
@@ -163,7 +170,7 @@ const LandingPage = () => {
               transition={{ duration: 0.6, delay: 0.6 }}
               className="text-sm text-gray-500 mt-4"
             >
-              No credit card required • 7-day free trial
+              No credit card required • Start with free trial
             </motion.p>
           </div>
         </div>
@@ -245,6 +252,12 @@ const LandingPage = () => {
           </div>
         </div>
       </footer>
+
+      <PlanSelectionModal
+        isOpen={isPlanModalOpen}
+        onClose={() => setIsPlanModalOpen(false)}
+        onPlanSelected={handlePlanSelected}
+      />
     </div>
   );
 };

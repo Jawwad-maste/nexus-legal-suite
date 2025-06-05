@@ -17,6 +17,7 @@ export type Database = {
           id: string
           name: string
           photo_url: string | null
+          user_id: string | null
         }
         Insert: {
           age?: number | null
@@ -25,6 +26,7 @@ export type Database = {
           id?: string
           name: string
           photo_url?: string | null
+          user_id?: string | null
         }
         Update: {
           age?: number | null
@@ -33,8 +35,17 @@ export type Database = {
           id?: string
           name?: string
           photo_url?: string | null
+          user_id?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "clients_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       documents: {
         Row: {
@@ -118,6 +129,16 @@ export type Database = {
           email: string | null
           full_name: string | null
           id: string
+          subscription_end_date: string | null
+          subscription_plan:
+            | Database["public"]["Enums"]["subscription_plan"]
+            | null
+          subscription_start_date: string | null
+          subscription_status:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
+          trial_end_date: string | null
+          trial_start_date: string | null
           updated_at: string | null
         }
         Insert: {
@@ -125,6 +146,16 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id: string
+          subscription_end_date?: string | null
+          subscription_plan?:
+            | Database["public"]["Enums"]["subscription_plan"]
+            | null
+          subscription_start_date?: string | null
+          subscription_status?:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -132,6 +163,16 @@ export type Database = {
           email?: string | null
           full_name?: string | null
           id?: string
+          subscription_end_date?: string | null
+          subscription_plan?:
+            | Database["public"]["Enums"]["subscription_plan"]
+            | null
+          subscription_start_date?: string | null
+          subscription_status?:
+            | Database["public"]["Enums"]["subscription_status"]
+            | null
+          trial_end_date?: string | null
+          trial_start_date?: string | null
           updated_at?: string | null
         }
         Relationships: []
@@ -141,10 +182,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_limits: {
+        Args: { user_id: string }
+        Returns: {
+          max_clients: number
+          max_documents: number
+          is_trial_expired: boolean
+        }[]
+      }
     }
     Enums: {
       event_type: "hearing" | "meeting"
+      subscription_plan: "free_trial" | "pro" | "pro_plus"
+      subscription_status: "active" | "expired" | "cancelled"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -261,6 +311,8 @@ export const Constants = {
   public: {
     Enums: {
       event_type: ["hearing", "meeting"],
+      subscription_plan: ["free_trial", "pro", "pro_plus"],
+      subscription_status: ["active", "expired", "cancelled"],
     },
   },
 } as const
