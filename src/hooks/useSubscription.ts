@@ -67,11 +67,9 @@ export const useUpdateSubscription = () => {
   
   return useMutation({
     mutationFn: async ({ 
-      plan, 
-      selectedPlan 
+      plan 
     }: { 
       plan: 'free_trial' | 'pro' | 'pro_plus';
-      selectedPlan: string;
     }) => {
       if (!user) throw new Error('No user');
       

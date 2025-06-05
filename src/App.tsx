@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
+import { ThemeProvider } from "./contexts/ThemeContext";
 import Navbar from "./components/Navbar";
 import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
@@ -27,8 +28,8 @@ const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-lg text-gray-900 dark:text-white">Loading...</div>
       </div>
     );
   }
@@ -47,8 +48,8 @@ const AppContent = () => {
   // Show loading screen while checking authentication
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-lg">Loading...</div>
+      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="text-lg text-gray-900 dark:text-white">Loading...</div>
       </div>
     );
   }
@@ -63,7 +64,7 @@ const AppContent = () => {
   }
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white dark:bg-gray-900">
       {/* Only show navbar for authenticated users on protected routes */}
       {user && !isPublicRoute && <Navbar />}
       
@@ -130,15 +131,17 @@ const AppContent = () => {
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <BrowserRouter>
-        <AuthProvider>
-          <AppContent />
-        </AuthProvider>
-      </BrowserRouter>
-    </TooltipProvider>
+    <ThemeProvider>
+      <TooltipProvider>
+        <Toaster />
+        <Sonner />
+        <BrowserRouter>
+          <AuthProvider>
+            <AppContent />
+          </AuthProvider>
+        </BrowserRouter>
+      </TooltipProvider>
+    </ThemeProvider>
   </QueryClientProvider>
 );
 
