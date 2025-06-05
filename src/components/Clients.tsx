@@ -1,133 +1,217 @@
+
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, Plus, MoreHorizontal, User, Edit, Trash2, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader } from '@/components/ui/card';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useClients } from '@/hooks/useClients';
-import { useDeleteClient } from '@/hooks/useClientOperations';
 import { ClientModal } from '@/components/ClientModal';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { Plus, Trash2, Edit, Users } from 'lucide-react';
-import { toast } from 'sonner';
+import { ClientEditModal } from '@/components/ClientEditModal';
+import { useClients } from '@/hooks/useClients';
+import { useClientOperations } from '@/hooks/useClientOperations';
 
 const Clients = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [editingClient, setEditingClient] = useState<any>(null);
+  const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  
   const { data: clients = [], isLoading } = useClients();
-  const deleteClient = useDeleteClient();
-  const navigate = useNavigate();
+  const { deleteClient } = useClientOperations();
 
-  const handleClientClick = (clientId: string) => {
-    navigate(`/clients/${clientId}`);
-  };
+  const filteredClients = clients.filter(client =>
+    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.case_title && client.case_title.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
 
-  const handleDeleteClient = async (clientId: string, clientName: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    if (!confirm(`Are you sure you want to delete ${clientName}? This will also delete all related documents and cannot be undone.`)) {
-      return;
-    }
-
-    try {
-      await deleteClient.mutateAsync(clientId);
-      toast.success('Client deleted successfully');
-    } catch (error) {
-      toast.error('Failed to delete client');
+  const handleDeleteClient = async (clientId: string) => {
+    if (confirm('Are you sure you want to delete this client?')) {
+      deleteClient.mutate(clientId);
     }
   };
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-lg">Loading clients...</div>
-      </div>
-    );
-  }
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-6 space-y-6 bg-gray-50 min-h-screen pt-20"
-    >
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Clients</h1>
-          <p className="text-gray-600 mt-1">Manage your clients and their information</p>
-        </div>
-        <Button 
-          onClick={() => setIsModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Client
-        </Button>
-      </div>
-
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {clients.map((client) => (
-            <motion.div
-              key={client.id}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-7xl mx-auto"
+      >
+        {/* Header */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Clients</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage your client relationships</p>
+            </div>
+            <Button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center space-x-2"
             >
-              <Card 
-                className="cursor-pointer hover:shadow-lg transition-all duration-200 bg-white border border-gray-200"
-                onClick={() => handleClientClick(client.id)}
-              >
-                <CardHeader className="pb-3">
-                  <div className="flex justify-between items-start">
-                    <Avatar className="w-16 h-16">
-                      <AvatarImage src={client.photo_url || ''} alt={client.name} />
-                      <AvatarFallback className="text-lg bg-blue-100 text-blue-700">
-                        {client.name.split(' ').map(n => n[0]).join('')}
-                      </AvatarFallback>
-                    </Avatar>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={(e) => handleDeleteClient(client.id, client.name, e)}
-                      className="text-red-500 hover:text-red-700 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-0 space-y-3">
-                  <div>
-                    <h3 className="font-semibold text-lg text-gray-900">{client.name}</h3>
-                    <p className="text-sm text-gray-600">{client.case_title || 'No case title'}</p>
-                    {client.age && (
-                      <p className="text-xs text-gray-500 mt-1">Age: {client.age}</p>
-                    )}
-                    <p className="text-xs text-gray-500">
-                      Client since: {new Date(client.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                  <div className="flex justify-between items-center pt-2 border-t border-gray-100">
-                    <span className="text-xs text-gray-500">Click to view details</span>
-                    <Edit className="h-4 w-4 text-gray-400" />
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
-
-        {clients.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 text-lg">No clients found</p>
-            <p className="text-gray-400">Create your first client to get started.</p>
+              <Plus className="w-5 h-5" />
+              <span>Add Client</span>
+            </Button>
           </div>
-        )}
-      </div>
+        </motion.div>
 
+        {/* Search and Filters */}
+        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search clients by name or case..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Clients Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <div className="col-span-full text-center py-12">
+                <div className="text-lg text-gray-900 dark:text-white">Loading clients...</div>
+              </div>
+            ) : filteredClients.length > 0 ? (
+              filteredClients.map((client) => (
+                <motion.div
+                  key={client.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  whileHover={{ scale: 1.02, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-center space-x-4">
+                      {client.photo_url ? (
+                        <img
+                          src={client.photo_url}
+                          alt={client.name}
+                          className="w-12 h-12 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center">
+                          <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{client.name}</h3>
+                        {client.age && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400">Age: {client.age}</p>
+                        )}
+                      </div>
+                    </div>
+                    <div className="relative">
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setSelectedClient(selectedClient === client.id ? null : client.id);
+                        }}
+                        className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                      >
+                        <MoreHorizontal className="w-4 h-4" />
+                      </Button>
+                      {selectedClient === client.id && (
+                        <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10 border border-gray-200 dark:border-gray-600">
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setEditingClient(client);
+                              setSelectedClient(null);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          >
+                            <Edit className="w-4 h-4 mr-2" />
+                            Edit
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleDeleteClient(client.id);
+                              setSelectedClient(null);
+                            }}
+                            className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Delete
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  {client.case_title && (
+                    <div className="mt-4">
+                      <h4 className="text-sm font-medium text-gray-900 dark:text-white">Case</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{client.case_title}</p>
+                    </div>
+                  )}
+
+                  <div className="mt-4 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
+                    <span>Added {new Date(client.created_at).toLocaleDateString()}</span>
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline" className="text-xs">
+                        View Details
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                variants={itemVariants}
+                className="col-span-full text-center py-12"
+              >
+                <User className="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No clients found</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">Get started by adding your first client</p>
+                <Button
+                  onClick={() => setIsCreateModalOpen(true)}
+                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
+                >
+                  Add Client
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+
+      {/* Modals */}
       <ClientModal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
       />
-    </motion.div>
+
+      {editingClient && (
+        <ClientEditModal
+          client={editingClient}
+          isOpen={!!editingClient}
+          onClose={() => setEditingClient(null)}
+        />
+      )}
+    </div>
   );
 };
 

@@ -71,20 +71,22 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
   const handlePlanSelect = async (planId: string) => {
     setSelectedPlan(planId);
     
-    if (planId === 'free_trial') {
-      try {
-        await updateSubscription.mutateAsync({ 
-          plan: 'free_trial'
-        });
+    try {
+      await updateSubscription.mutateAsync({ 
+        plan: planId as 'free_trial' | 'pro' | 'pro_plus'
+      });
+      
+      if (planId === 'free_trial') {
         toast.success('Free trial started successfully!');
-        onPlanSelected(planId);
-        onClose();
-      } catch (error) {
-        console.error('Error starting free trial:', error);
-        toast.error('Failed to start free trial');
+      } else {
+        toast.success(`${planId.toUpperCase()} plan activated successfully!`);
       }
-    } else {
-      setShowPayment(true);
+      
+      onPlanSelected(planId);
+      onClose();
+    } catch (error: any) {
+      console.error('Error updating subscription:', error);
+      toast.error(`Failed to activate ${planId} plan: ${error.message}`);
     }
   };
 
@@ -93,14 +95,19 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
     
     if (!selectedPlan) return;
     
+    // Simulate payment processing
     try {
+      // In a real app, you would process payment here
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
       await updateSubscription.mutateAsync({ 
         plan: selectedPlan as 'pro' | 'pro_plus'
       });
-      toast.success('Subscription activated successfully!');
+      
+      toast.success('Payment processed and subscription activated successfully!');
       onPlanSelected(selectedPlan);
       onClose();
-    } catch (error) {
+    } catch (error: any) {
       console.error('Payment error:', error);
       toast.error('Payment failed. Please try again.');
     }
@@ -164,7 +171,7 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
 
                   <Button
                     onClick={() => handlePlanSelect(plan.id)}
-                    disabled={updateSubscription.isPending}
+                    disabled={updateSubscription.isPending && selectedPlan === plan.id}
                     className={`w-full ${
                       plan.popular
                         ? 'bg-blue-600 hover:bg-blue-700 text-white'

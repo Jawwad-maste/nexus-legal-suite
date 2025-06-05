@@ -2,6 +2,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
+import { toast } from 'sonner';
 
 export interface UserLimits {
   max_clients: number;
@@ -35,7 +36,30 @@ export const useUserProfile = () => {
         .eq('id', user.id)
         .single();
       
-      if (error) throw error;
+      if (error) {
+        // If profile doesn't exist, create it
+        if (error.code === 'PGRST116') {
+          const newProfile = {
+            id: user.id,
+            email: user.email || '',
+            full_name: user.user_metadata?.full_name || user.email || '',
+            subscription_plan: 'free_trial' as const,
+            subscription_status: 'active' as const,
+            trial_start_date: new Date().toISOString(),
+            trial_end_date: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          };
+          
+          const { data: createdProfile, error: createError } = await supabase
+            .from('profiles')
+            .insert([newProfile])
+            .select()
+            .single();
+            
+          if (createError) throw createError;
+          return createdProfile as UserProfile;
+        }
+        throw error;
+      }
       return data as UserProfile;
     },
     enabled: !!user,
@@ -77,26 +101,56 @@ export const useUpdateSubscription = () => {
         subscription_plan: plan,
         subscription_status: 'active',
         subscription_start_date: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       };
       
       if (plan === 'free_trial') {
         updateData.trial_start_date = new Date().toISOString();
         updateData.trial_end_date = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
+      } else {
+        // For paid plans, set subscription end date to 1 month from now
+        updateData.subscription_end_date = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
       }
       
-      const { data, error } = await supabase
+      // First, try to update existing profile
+      let { data, error } = await supabase
         .from('profiles')
         .update(updateData)
         .eq('id', user.id)
         .select()
         .single();
       
-      if (error) throw error;
+      // If profile doesn't exist, create it
+      if (error && error.code === 'PGRST116') {
+        const newProfile = {
+          id: user.id,
+          email: user.email || '',
+          full_name: user.user_metadata?.full_name || user.email || '',
+          ...updateData,
+        };
+        
+        const { data: createdData, error: createError } = await supabase
+          .from('profiles')
+          .insert([newProfile])
+          .select()
+          .single();
+          
+        if (createError) throw createError;
+        data = createdData;
+      } else if (error) {
+        throw error;
+      }
+      
       return data;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['userProfile'] });
       queryClient.invalidateQueries({ queryKey: ['userLimits'] });
+      toast.success('Subscription updated successfully!');
+    },
+    onError: (error: any) => {
+      console.error('Subscription update error:', error);
+      toast.error('Failed to update subscription: ' + error.message);
     },
   });
 };

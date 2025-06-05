@@ -1,145 +1,203 @@
 
 import React, { useState } from 'react';
-import { useClients } from '@/hooks/useClients';
-import { useDocuments } from '@/hooks/useDocuments';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, Filter, Plus, FileText, Download, Eye, MoreHorizontal, Trash2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useNavigate } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { FileText, Upload, Eye, Plus, Users } from 'lucide-react';
-import { ClientModal } from '@/components/ClientModal';
+import { useDocuments } from '@/hooks/useDocuments';
 
 const Documents = () => {
-  const [isClientModalOpen, setIsClientModalOpen] = useState(false);
-  const { data: clients = [], isLoading: clientsLoading } = useClients();
-  const { data: documents = [], isLoading: documentsLoading } = useDocuments();
-  const navigate = useNavigate();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterType, setFilterType] = useState('All');
+  const [selectedDocument, setSelectedDocument] = useState<string | null>(null);
+  
+  const { data: documents = [], isLoading } = useDocuments();
 
-  const handleClientClick = (clientId: string) => {
-    navigate(`/documents/${clientId}`);
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (doc.client?.name && doc.client.name.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesFilter = filterType === 'All' || doc.file_type.includes(filterType.toLowerCase());
+    return matchesSearch && matchesFilter;
+  });
+
+  const getFileIcon = (fileType: string) => {
+    if (fileType.includes('pdf')) return '📄';
+    if (fileType.includes('image')) return '🖼️';
+    if (fileType.includes('word') || fileType.includes('doc')) return '📝';
+    if (fileType.includes('excel') || fileType.includes('sheet')) return '📊';
+    return '📎';
   };
 
-  const getClientDocumentCount = (clientId: string) => {
-    return documents.filter(doc => doc.client_id === clientId).length;
+  const formatFileSize = (bytes: number) => {
+    if (bytes === 0) return '0 Bytes';
+    const k = 1024;
+    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+    const i = Math.floor(Math.log(bytes) / Math.log(k));
+    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
   };
 
-  if (clientsLoading || documentsLoading) {
-    return (
-      <div className="flex items-center justify-center h-96">
-        <div className="text-lg">Loading documents...</div>
-      </div>
-    );
-  }
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.1 }
+    }
+  };
+
+  const itemVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { opacity: 1, y: 0 }
+  };
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="p-6 space-y-6 bg-gray-50 min-h-screen pt-20"
-    >
-      <div className="flex justify-between items-center max-w-7xl mx-auto">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900">Documents</h1>
-          <p className="text-gray-600 mt-1">Manage client documents and files</p>
-        </div>
-        <Button 
-          onClick={() => setIsClientModalOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" />
-          Add Client
-        </Button>
-      </div>
-
-      <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {clients.map((client) => {
-            const documentCount = getClientDocumentCount(client.id);
-            
-            return (
-              <motion.div
-                key={client.id}
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-              >
-                <Card 
-                  className="cursor-pointer hover:shadow-lg transition-all duration-200 bg-white border border-gray-200"
-                  onClick={() => handleClientClick(client.id)}
-                >
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center space-x-3">
-                      <Avatar className="w-12 h-12">
-                        <AvatarImage src={client.photo_url || ''} alt={client.name} />
-                        <AvatarFallback className="bg-blue-100 text-blue-700">
-                          {client.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1">
-                        <CardTitle className="text-lg">{client.name}</CardTitle>
-                        <p className="text-sm text-gray-600">{client.case_title || 'No case title'}</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="h-4 w-4 text-gray-500" />
-                        <span className="text-sm text-gray-600">
-                          {documentCount} document{documentCount !== 1 ? 's' : ''}
-                        </span>
-                      </div>
-                      <div className="flex space-x-2">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/documents/${client.id}`);
-                          }}
-                          className="flex items-center gap-1"
-                        >
-                          <Eye className="h-3 w-3" />
-                          View
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            navigate(`/documents/${client.id}`);
-                          }}
-                          className="flex items-center gap-1"
-                        >
-                          <Upload className="h-3 w-3" />
-                          Upload
-                        </Button>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500 border-t border-gray-100 pt-2">
-                      Click to manage documents
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
-
-        {clients.length === 0 && (
-          <div className="text-center py-12">
-            <Users className="h-16 w-16 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500 text-lg">No clients found</p>
-            <p className="text-gray-400">Add a client first to start managing documents.</p>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-4 sm:px-6 lg:px-8">
+      <motion.div
+        variants={containerVariants}
+        initial="hidden"
+        animate="visible"
+        className="max-w-7xl mx-auto"
+      >
+        {/* Header */}
+        <motion.div variants={itemVariants} className="mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Documents</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage all client documents</p>
+            </div>
+            <Button className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center space-x-2">
+              <Upload className="w-5 h-5" />
+              <span>Upload Document</span>
+            </Button>
           </div>
-        )}
-      </div>
+        </motion.div>
 
-      <ClientModal
-        isOpen={isClientModalOpen}
-        onClose={() => setIsClientModalOpen(false)}
-      />
-    </motion.div>
+        {/* Search and Filters */}
+        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
+            <div className="flex-1 relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
+              <input
+                type="text"
+                placeholder="Search documents by name or client..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white placeholder-gray-400 dark:placeholder-gray-500"
+              />
+            </div>
+            <div className="flex items-center space-x-4">
+              <select
+                value={filterType}
+                onChange={(e) => setFilterType(e.target.value)}
+                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
+              >
+                <option value="All">All Types</option>
+                <option value="PDF">PDF</option>
+                <option value="Image">Images</option>
+                <option value="Word">Word Documents</option>
+                <option value="Excel">Spreadsheets</option>
+              </select>
+            </div>
+          </div>
+        </motion.div>
+
+        {/* Documents Grid */}
+        <motion.div variants={itemVariants} className="grid grid-cols-1 gap-4">
+          <AnimatePresence mode="wait">
+            {isLoading ? (
+              <div className="text-center py-12">
+                <div className="text-lg text-gray-900 dark:text-white">Loading documents...</div>
+              </div>
+            ) : filteredDocuments.length > 0 ? (
+              filteredDocuments.map((document) => (
+                <motion.div
+                  key={document.id}
+                  layout
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  whileHover={{ scale: 1.01, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
+                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 transition-all duration-200"
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center space-x-4">
+                      <div className="text-2xl">
+                        {getFileIcon(document.file_type)}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{document.file_name}</h3>
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 dark:text-gray-400 mt-1">
+                          {document.client && (
+                            <span>Client: {document.client.name}</span>
+                          )}
+                          {document.file_size && (
+                            <span>Size: {formatFileSize(document.file_size)}</span>
+                          )}
+                          <span>Uploaded: {new Date(document.uploaded_at).toLocaleDateString()}</span>
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center space-x-1"
+                        onClick={() => window.open(document.file_url, '_blank')}
+                      >
+                        <Eye className="w-4 h-4" />
+                        <span>View</span>
+                      </Button>
+                      <Button
+                        size="sm"
+                        variant="outline"
+                        className="flex items-center space-x-1"
+                        onClick={() => {
+                          const link = document.createElement('a');
+                          link.href = document.file_url;
+                          link.download = document.file_name;
+                          link.click();
+                        }}
+                      >
+                        <Download className="w-4 h-4" />
+                        <span>Download</span>
+                      </Button>
+                      <div className="relative">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => setSelectedDocument(selectedDocument === document.id ? null : document.id)}
+                          className="text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300"
+                        >
+                          <MoreHorizontal className="w-4 h-4" />
+                        </Button>
+                        {selectedDocument === document.id && (
+                          <div className="absolute right-0 mt-2 w-32 bg-white dark:bg-gray-700 rounded-md shadow-lg z-10 border border-gray-200 dark:border-gray-600">
+                            <button className="flex items-center w-full px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-600">
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Delete
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </motion.div>
+              ))
+            ) : (
+              <motion.div
+                variants={itemVariants}
+                className="text-center py-12"
+              >
+                <FileText className="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No documents found</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-6">Upload your first document to get started</p>
+                <Button className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800">
+                  Upload Document
+                </Button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 };
 
