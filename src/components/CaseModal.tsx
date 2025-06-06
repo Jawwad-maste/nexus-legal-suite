@@ -26,6 +26,8 @@ export const CaseModal = ({ isOpen, onClose }: CaseModalProps) => {
     existing_client_id: '',
     new_client_name: '',
     new_client_age: '',
+    new_client_phone: '',
+    new_client_email: '',
     use_existing_client: true,
   });
 
@@ -44,6 +46,8 @@ export const CaseModal = ({ isOpen, onClose }: CaseModalProps) => {
         const newClient = await createClient.mutateAsync({
           name: formData.new_client_name,
           age: formData.new_client_age ? parseInt(formData.new_client_age) : undefined,
+          phone: formData.new_client_phone || undefined,
+          email: formData.new_client_email || undefined,
           case_title: formData.title,
         });
         clientName = newClient.name;
@@ -71,6 +75,8 @@ export const CaseModal = ({ isOpen, onClose }: CaseModalProps) => {
         existing_client_id: '',
         new_client_name: '',
         new_client_age: '',
+        new_client_phone: '',
+        new_client_email: '',
         use_existing_client: true,
       });
     } catch (error) {
@@ -80,7 +86,7 @@ export const CaseModal = ({ isOpen, onClose }: CaseModalProps) => {
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Create New Case</DialogTitle>
         </DialogHeader>
@@ -178,24 +184,46 @@ export const CaseModal = ({ isOpen, onClose }: CaseModalProps) => {
                   </Select>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <Label htmlFor="new_client_name">New Client Name</Label>
-                    <Input
-                      id="new_client_name"
-                      value={formData.new_client_name}
-                      onChange={(e) => setFormData({ ...formData, new_client_name: e.target.value })}
-                      required={!formData.use_existing_client}
-                    />
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="new_client_name">Client Name</Label>
+                      <Input
+                        id="new_client_name"
+                        value={formData.new_client_name}
+                        onChange={(e) => setFormData({ ...formData, new_client_name: e.target.value })}
+                        required={!formData.use_existing_client}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new_client_age">Age (Optional)</Label>
+                      <Input
+                        id="new_client_age"
+                        type="number"
+                        value={formData.new_client_age}
+                        onChange={(e) => setFormData({ ...formData, new_client_age: e.target.value })}
+                      />
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="new_client_age">Client Age (Optional)</Label>
-                    <Input
-                      id="new_client_age"
-                      type="number"
-                      value={formData.new_client_age}
-                      onChange={(e) => setFormData({ ...formData, new_client_age: e.target.value })}
-                    />
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <Label htmlFor="new_client_phone">Phone (Optional)</Label>
+                      <Input
+                        id="new_client_phone"
+                        type="tel"
+                        value={formData.new_client_phone}
+                        onChange={(e) => setFormData({ ...formData, new_client_phone: e.target.value })}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="new_client_email">Email (Optional)</Label>
+                      <Input
+                        id="new_client_email"
+                        type="email"
+                        value={formData.new_client_email}
+                        onChange={(e) => setFormData({ ...formData, new_client_email: e.target.value })}
+                      />
+                    </div>
                   </div>
                 </div>
               )}

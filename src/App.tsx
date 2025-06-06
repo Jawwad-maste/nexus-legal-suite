@@ -20,26 +20,9 @@ import LandingPage from "./components/LandingPage";
 import PricingPage from "./components/PricingPage";
 import AuthPage from "./components/AuthPage";
 import NotFound from "./pages/NotFound";
+import ProtectedRoute from "./components/ProtectedRoute";
 
 const queryClient = new QueryClient();
-
-const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-  const { user, loading } = useAuth();
-  
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-white dark:bg-gray-900">
-        <div className="text-lg text-gray-900 dark:text-white">Loading...</div>
-      </div>
-    );
-  }
-  
-  if (!user) {
-    return <LandingPage />;
-  }
-  
-  return <>{children}</>;
-};
 
 const AppContent = () => {
   const location = useLocation();
@@ -74,7 +57,7 @@ const AppContent = () => {
           <Route path="/pricing" element={<PricingPage />} />
           <Route path="/auth" element={<AuthPage />} />
           
-          {/* Protected routes */}
+          {/* Protected routes - now using ProtectedRoute wrapper */}
           <Route path="/" element={
             <ProtectedRoute>
               <Dashboard />

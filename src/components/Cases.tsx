@@ -1,29 +1,38 @@
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Plus, Calendar, User, FileText, MoreHorizontal, AlertCircle, Edit, Trash2 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { useAuth } from '@/hooks/useAuth';
-import { supabase } from '@/integrations/supabase/client';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from 'sonner';
-import { Case } from '@/types/database';
-import type { Database } from '@/integrations/supabase/types';
 
-type CaseRow = Database['public']['Tables']['cases']['Row'];
-type CaseInsert = Database['public']['Tables']['cases']['Insert'];
-type CaseUpdate = Database['public']['Tables']['cases']['Update'];
+import React, { useState } from 'react';
+import { motion } from 'framer-motion';
+import { Plus, Search, Filter, Edit, Trash2, Calendar, Clock, User } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { CaseModal } from './CaseModal';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/hooks/useAuth';
+import { useCaseOperations } from '@/hooks/useCaseOperations';
+import { toast } from 'sonner';
+
+interface Case {
+  id: string;
+  title: string;
+  description: string;
+  status: 'Active' | 'Pending Review' | 'Discovery' | 'Investigation' | 'Completed';
+  priority: 'High' | 'Medium' | 'Low';
+  client_name: string;
+  created_at: string;
+  updated_at: string;
+}
 
 const Cases = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('All');
-  const [selectedCase, setSelectedCase] = useState<string | null>(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [editingCase, setEditingCase] = useState<CaseRow | null>(null);
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { user } = useAuth();
-  const queryClient = useQueryClient();
+  const { deleteCase } = useCaseOperations();
 
   // Fetch cases
-  const { data: cases = [], isLoading } = useQuery({
+  const { data: cases = [], isLoading, refetch } = useQuery({
     queryKey: ['cases', user?.id],
     queryFn: async () => {
       if (!user) return [];
@@ -35,407 +44,202 @@ const Cases = () => {
         .order('created_at', { ascending: false });
       
       if (error) throw error;
-      return data as CaseRow[];
+      return data as Case[];
     },
     enabled: !!user,
   });
 
-  // Create case mutation
-  const createCase = useMutation({
-    mutationFn: async (caseData: Omit<CaseInsert, 'id' | 'created_at' | 'updated_at' | 'user_id'>) => {
-      if (!user) throw new Error('User not authenticated');
+  // Set up real-time subscription for cases
+  React.useEffect(() => {
+    if (!user) return;
 
-      const { data, error } = await supabase
-        .from('cases')
-        .insert([{
-          ...caseData,
-          user_id: user.id
-        }])
-        .select()
-        .single();
+    const channel = supabase
+      .channel('cases-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'cases',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          refetch();
+        }
+      )
+      .subscribe();
 
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cases'] });
-      toast.success('Case created successfully');
-      setShowCreateModal(false);
-    },
-    onError: () => {
-      toast.error('Failed to create case');
-    },
-  });
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, refetch]);
 
-  // Update case mutation
-  const updateCase = useMutation({
-    mutationFn: async ({ id, ...updates }: Partial<CaseUpdate> & { id: string }) => {
-      const { data, error } = await supabase
-        .from('cases')
-        .update({ ...updates, updated_at: new Date().toISOString() })
-        .eq('id', id)
-        .select()
-        .single();
-
-      if (error) throw error;
-      return data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cases'] });
-      toast.success('Case updated successfully');
-      setEditingCase(null);
-    },
-    onError: () => {
-      toast.error('Failed to update case');
-    },
-  });
-
-  // Delete case mutation
-  const deleteCase = useMutation({
-    mutationFn: async (caseId: string) => {
-      const { error } = await supabase
-        .from('cases')
-        .delete()
-        .eq('id', caseId);
-
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['cases'] });
-      toast.success('Case deleted successfully');
-    },
-    onError: () => {
-      toast.error('Failed to delete case');
-    },
+  const filteredCases = cases.filter(caseItem => {
+    const matchesSearch = caseItem.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         caseItem.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         caseItem.description.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || caseItem.status === statusFilter;
+    return matchesSearch && matchesStatus;
   });
 
   const getStatusColor = (status: string) => {
     switch (status) {
-      case 'Active': return 'bg-green-100 text-green-800 border-green-200 dark:bg-green-900 dark:text-green-300 dark:border-green-700';
-      case 'Pending Review': return 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900 dark:text-yellow-300 dark:border-yellow-700';
-      case 'Discovery': return 'bg-blue-100 text-blue-800 border-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:border-blue-700';
-      case 'Investigation': return 'bg-purple-100 text-purple-800 border-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:border-purple-700';
-      case 'Completed': return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
-      default: return 'bg-gray-100 text-gray-800 border-gray-200 dark:bg-gray-700 dark:text-gray-300 dark:border-gray-600';
+      case 'Active': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      case 'Pending Review': return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200';
+      case 'Discovery': return 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200';
+      case 'Investigation': return 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200';
+      case 'Completed': return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
   const getPriorityColor = (priority: string) => {
     switch (priority) {
-      case 'High': return 'text-red-500 dark:text-red-400';
-      case 'Medium': return 'text-yellow-500 dark:text-yellow-400';
-      case 'Low': return 'text-green-500 dark:text-green-400';
-      default: return 'text-gray-500 dark:text-gray-400';
+      case 'High': return 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200';
+      case 'Medium': return 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200';
+      case 'Low': return 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200';
+      default: return 'bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200';
     }
   };
 
-  const filteredCases = cases.filter(case_item => {
-    const matchesSearch = case_item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         case_item.client_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         case_item.description.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterStatus === 'All' || case_item.status === filterStatus;
-    return matchesSearch && matchesFilter;
-  });
-
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.1 }
+  const handleDeleteCase = async (caseId: string) => {
+    if (window.confirm('Are you sure you want to delete this case?')) {
+      try {
+        await deleteCase.mutateAsync(caseId);
+      } catch (error) {
+        toast.error('Failed to delete case');
+      }
     }
   };
 
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: { opacity: 1, y: 0 }
-  };
-
-  const CaseForm = ({ case_item, onSubmit, onCancel }: { 
-    case_item?: CaseRow; 
-    onSubmit: (data: any) => void; 
-    onCancel: () => void; 
-  }) => {
-    const [formData, setFormData] = useState({
-      title: case_item?.title || '',
-      description: case_item?.description || '',
-      status: case_item?.status || 'Active',
-      priority: case_item?.priority || 'Medium',
-      client_name: case_item?.client_name || ''
-    });
-
-    const handleSubmit = (e: React.FormEvent) => {
-      e.preventDefault();
-      onSubmit(formData);
-    };
-
+  if (isLoading) {
     return (
-      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-        <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          className="bg-white dark:bg-gray-800 rounded-xl p-6 w-full max-w-md"
-        >
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            {case_item ? 'Edit Case' : 'Create New Case'}
-          </h3>
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Case Title
-              </label>
-              <input
-                type="text"
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Client Name
-              </label>
-              <input
-                type="text"
-                value={formData.client_name}
-                onChange={(e) => setFormData({ ...formData, client_name: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                Description
-              </label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                rows={3}
-                required
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Status
-                </label>
-                <select
-                  value={formData.status}
-                  onChange={(e) => setFormData({ ...formData, status: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value="Active">Active</option>
-                  <option value="Pending Review">Pending Review</option>
-                  <option value="Discovery">Discovery</option>
-                  <option value="Investigation">Investigation</option>
-                  <option value="Completed">Completed</option>
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                  Priority
-                </label>
-                <select
-                  value={formData.priority}
-                  onChange={(e) => setFormData({ ...formData, priority: e.target.value as any })}
-                  className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                >
-                  <option value="High">High</option>
-                  <option value="Medium">Medium</option>
-                  <option value="Low">Low</option>
-                </select>
-              </div>
-            </div>
-            <div className="flex space-x-4 pt-4">
-              <Button type="button" variant="outline" onClick={onCancel} className="flex-1">
-                Cancel
-              </Button>
-              <Button type="submit" className="flex-1 bg-blue-600 hover:bg-blue-700">
-                {case_item ? 'Update' : 'Create'} Case
-              </Button>
-            </div>
-          </form>
-        </motion.div>
+      <div className="min-h-screen bg-white dark:bg-gray-900 pt-16">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">Loading cases...</div>
+        </div>
       </div>
     );
-  };
+  }
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-4 sm:px-6 lg:px-8">
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="max-w-7xl mx-auto"
-      >
+    <div className="min-h-screen bg-white dark:bg-gray-900 pt-16">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <motion.div variants={itemVariants} className="mb-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Cases</h1>
-              <p className="text-gray-600 dark:text-gray-400">Manage and track all your legal cases</p>
-            </div>
-            <Button
-              onClick={() => setShowCreateModal(true)}
-              className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center space-x-2"
-            >
-              <Plus className="w-5 h-5" />
-              <span>New Case</span>
-            </Button>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
+          <div>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Cases</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage and track all your legal cases</p>
           </div>
-        </motion.div>
+          <Button onClick={() => setIsModalOpen(true)} className="mt-4 sm:mt-0">
+            <Plus className="w-4 h-4 mr-2" />
+            New Case
+          </Button>
+        </div>
 
-        {/* Filters and Search */}
-        <motion.div variants={itemVariants} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 mb-6">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0 sm:space-x-4">
-            <div className="flex-1 relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-500 dark:text-gray-400 w-5 h-5" />
-              <input
-                type="text"
-                placeholder="Search cases by title, client, or description..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              />
-            </div>
-            <div className="flex items-center space-x-4">
-              <select
-                value={filterStatus}
-                onChange={(e) => setFilterStatus(e.target.value)}
-                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-              >
-                <option value="All">All Status</option>
-                <option value="Active">Active</option>
-                <option value="Pending Review">Pending Review</option>
-                <option value="Discovery">Discovery</option>
-                <option value="Investigation">Investigation</option>
-                <option value="Completed">Completed</option>
-              </select>
-            </div>
+        {/* Filters */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Input
+              placeholder="Search cases..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10"
+            />
           </div>
-        </motion.div>
+          <select
+            value={statusFilter}
+            onChange={(e) => setStatusFilter(e.target.value)}
+            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+          >
+            <option value="all">All Status</option>
+            <option value="Active">Active</option>
+            <option value="Pending Review">Pending Review</option>
+            <option value="Discovery">Discovery</option>
+            <option value="Investigation">Investigation</option>
+            <option value="Completed">Completed</option>
+          </select>
+        </div>
 
         {/* Cases Grid */}
-        <motion.div variants={itemVariants} className="grid grid-cols-1 gap-6">
-          <AnimatePresence mode="wait">
-            {isLoading ? (
-              <div className="text-center py-12">
-                <div className="text-lg text-gray-900 dark:text-white">Loading cases...</div>
-              </div>
-            ) : filteredCases.length > 0 ? (
-              filteredCases.map((case_item) => (
-                <motion.div
-                  key={case_item.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  whileHover={{ scale: 1.01, boxShadow: "0 10px 30px rgba(0,0,0,0.1)" }}
-                  className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm border border-gray-200 dark:border-gray-700 cursor-pointer transition-all duration-200"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-3">
-                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white">{case_item.title}</h3>
-                        <span className={`px-3 py-1 rounded-full text-xs font-medium border ${getStatusColor(case_item.status)}`}>
-                          {case_item.status}
-                        </span>
-                        <div className={`flex items-center ${getPriorityColor(case_item.priority)}`}>
-                          <AlertCircle className="w-4 h-4 mr-1" />
-                          <span className="text-sm font-medium">{case_item.priority}</span>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <User className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Client:</span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">{case_item.client_name}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Calendar className="w-4 h-4 text-gray-500 dark:text-gray-400" />
-                          <span className="text-sm text-gray-600 dark:text-gray-400">Created:</span>
-                          <span className="text-sm font-medium text-gray-900 dark:text-white">
-                            {new Date(case_item.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                      </div>
-
-                      <p className="text-gray-600 dark:text-gray-400 mb-4">{case_item.description}</p>
-
-                      <div className="flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
-                        <span>Updated {new Date(case_item.updated_at).toLocaleDateString()}</span>
-                        <div className="flex space-x-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setEditingCase(case_item);
-                            }}
-                            className="flex items-center space-x-1"
-                          >
-                            <Edit className="w-4 h-4" />
-                            <span>Edit</span>
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              if (confirm('Are you sure you want to delete this case?')) {
-                                deleteCase.mutate(case_item.id);
-                              }
-                            }}
-                            className="flex items-center space-x-1 text-red-600 hover:text-red-700"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                            <span>Delete</span>
-                          </Button>
-                        </div>
+        {filteredCases.length === 0 ? (
+          <div className="text-center py-12">
+            <div className="text-gray-500 dark:text-gray-400 mb-4">No cases found</div>
+            <Button onClick={() => setIsModalOpen(true)}>
+              <Plus className="w-4 h-4 mr-2" />
+              Create Your First Case
+            </Button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredCases.map((caseItem) => (
+              <motion.div
+                key={caseItem.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="group"
+              >
+                <Card className="h-full hover:shadow-lg transition-shadow duration-200">
+                  <CardHeader className="pb-3">
+                    <div className="flex justify-between items-start mb-2">
+                      <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
+                        {caseItem.title}
+                      </CardTitle>
+                      <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                          <Edit className="w-4 h-4" />
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="ghost" 
+                          className="h-8 w-8 p-0 text-red-600 hover:text-red-700"
+                          onClick={() => handleDeleteCase(caseItem.id)}
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
                       </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))
-            ) : (
-              <motion.div
-                variants={itemVariants}
-                className="text-center py-12"
-              >
-                <FileText className="w-12 h-12 text-gray-500 dark:text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">No cases found</h3>
-                <p className="text-gray-600 dark:text-gray-400 mb-6">Get started by creating your first case</p>
-                <Button
-                  onClick={() => setShowCreateModal(true)}
-                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800"
-                >
-                  Create New Case
-                </Button>
+                    <div className="flex flex-wrap gap-2">
+                      <Badge className={getStatusColor(caseItem.status)}>
+                        {caseItem.status}
+                      </Badge>
+                      <Badge className={getPriorityColor(caseItem.priority)}>
+                        {caseItem.priority}
+                      </Badge>
+                    </div>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
+                      {caseItem.description}
+                    </p>
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                        <User className="w-4 h-4 mr-2" />
+                        <span>{caseItem.client_name}</span>
+                      </div>
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                        <Calendar className="w-4 h-4 mr-2" />
+                        <span>Created: {new Date(caseItem.created_at).toLocaleDateString()}</span>
+                      </div>
+                      <div className="flex items-center text-gray-500 dark:text-gray-400">
+                        <Clock className="w-4 h-4 mr-2" />
+                        <span>Updated: {new Date(caseItem.updated_at).toLocaleDateString()}</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
-            )}
-          </AnimatePresence>
-        </motion.div>
-      </motion.div>
+            ))}
+          </div>
+        )}
 
-      {/* Create/Edit Modal */}
-      {(showCreateModal || editingCase) && (
-        <CaseForm
-          case_item={editingCase || undefined}
-          onSubmit={(data) => {
-            if (editingCase) {
-              updateCase.mutate({ id: editingCase.id, ...data });
-            } else {
-              createCase.mutate(data);
-            }
-          }}
-          onCancel={() => {
-            setShowCreateModal(false);
-            setEditingCase(null);
-          }}
+        {/* Case Modal */}
+        <CaseModal 
+          isOpen={isModalOpen} 
+          onClose={() => setIsModalOpen(false)}
         />
-      )}
+      </div>
     </div>
   );
 };
