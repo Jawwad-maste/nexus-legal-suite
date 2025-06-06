@@ -9,7 +9,7 @@ export const useCreateClient = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async (clientData: { name: string; age?: number; case_title?: string; photo_url?: string }) => {
+    mutationFn: async (clientData: { name: string; age?: number; case_title?: string; photo_url?: string; phone?: string; email?: string }) => {
       if (!user) throw new Error('User not authenticated');
 
       const { data, error } = await supabase
