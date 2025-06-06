@@ -1,21 +1,48 @@
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Filter, Plus, MoreHorizontal, User, Edit, Trash2, Phone, Mail } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClientModal } from '@/components/ClientModal';
 import { ClientEditModal } from '@/components/ClientEditModal';
+import { ClientDetailModal } from '@/components/ClientDetailModal';
 import { useClients } from '@/hooks/useClients';
 import { useClientOperations } from '@/hooks/useClientOperations';
+import { supabase } from '@/integrations/supabase/client';
+import { useQueryClient } from '@tanstack/react-query';
 
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
+  const [viewingClient, setViewingClient] = useState<any>(null);
   
   const { data: clients = [], isLoading } = useClients();
   const { deleteClient } = useClientOperations();
+  const queryClient = useQueryClient();
+
+  // Set up real-time subscription for clients
+  useEffect(() => {
+    const channel = supabase
+      .channel('clients-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['clients'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [queryClient]);
 
   const filteredClients = clients.filter(client =>
     client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -26,6 +53,11 @@ const Clients = () => {
     if (confirm('Are you sure you want to delete this client?')) {
       deleteClient.mutate(clientId);
     }
+  };
+
+  const handleViewDetails = (client: any) => {
+    setViewingClient(client);
+    setSelectedClient(null);
   };
 
   const containerVariants = {
@@ -171,7 +203,15 @@ const Clients = () => {
                   <div className="mt-4 flex items-center justify-between text-sm text-gray-500 dark:text-gray-400">
                     <span>Added {new Date(client.created_at).toLocaleDateString()}</span>
                     <div className="flex space-x-2">
-                      <Button size="sm" variant="outline" className="text-xs">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-xs"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleViewDetails(client);
+                        }}
+                      >
                         View Details
                       </Button>
                     </div>
@@ -211,6 +251,12 @@ const Clients = () => {
           onClose={() => setEditingClient(null)}
         />
       )}
+
+      <ClientDetailModal
+        client={viewingClient}
+        isOpen={!!viewingClient}
+        onClose={() => setViewingClient(null)}
+      />
     </div>
   );
 };

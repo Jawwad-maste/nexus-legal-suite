@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from './useAuth';
 import { toast } from 'sonner';
+import { useEffect } from 'react';
 
 export interface UserLimits {
   max_clients: number;
@@ -23,7 +24,7 @@ export interface UserProfile {
 }
 
 export const useUserProfile = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   return useQuery({
     queryKey: ['userProfile', user?.id],
@@ -62,12 +63,12 @@ export const useUserProfile = () => {
       }
       return data as UserProfile;
     },
-    enabled: !!user,
+    enabled: !!user && !authLoading,
   });
 };
 
 export const useUserLimits = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   return useQuery({
     queryKey: ['userLimits', user?.id],
@@ -81,7 +82,7 @@ export const useUserLimits = () => {
       if (error) throw error;
       return data[0] as UserLimits;
     },
-    enabled: !!user,
+    enabled: !!user && !authLoading,
   });
 };
 
@@ -95,7 +96,11 @@ export const useUpdateSubscription = () => {
     }: { 
       plan: 'free_trial' | 'pro' | 'pro_plus';
     }) => {
-      if (!user) throw new Error('No user');
+      if (!user) {
+        throw new Error('You must be logged in to update your subscription');
+      }
+      
+      console.log('Updating subscription for user:', user.id, 'to plan:', plan);
       
       const updateData: any = {
         subscription_plan: plan,
@@ -156,7 +161,7 @@ export const useUpdateSubscription = () => {
 };
 
 export const useCurrentCounts = () => {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   
   const clientsQuery = useQuery({
     queryKey: ['clientCount', user?.id],
@@ -171,7 +176,7 @@ export const useCurrentCounts = () => {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!user,
+    enabled: !!user && !authLoading,
   });
   
   const documentsQuery = useQuery({
@@ -199,7 +204,7 @@ export const useCurrentCounts = () => {
       if (error) throw error;
       return count || 0;
     },
-    enabled: !!user,
+    enabled: !!user && !authLoading,
   });
   
   return {
@@ -207,4 +212,45 @@ export const useCurrentCounts = () => {
     documentCount: documentsQuery.data || 0,
     isLoading: clientsQuery.isLoading || documentsQuery.isLoading,
   };
+};
+
+// Add real-time subscription for counts
+export const useRealtimeCounts = () => {
+  const { user } = useAuth();
+  const queryClient = useQueryClient();
+
+  useEffect(() => {
+    if (!user) return;
+
+    const channel = supabase
+      .channel('schema-db-changes')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'clients',
+          filter: `user_id=eq.${user.id}`
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['clientCount'] });
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'documents'
+        },
+        () => {
+          queryClient.invalidateQueries({ queryKey: ['documentCount'] });
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, queryClient]);
 };

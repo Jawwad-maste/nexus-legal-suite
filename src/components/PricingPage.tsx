@@ -1,187 +1,180 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { motion } from 'framer-motion';
-import { useNavigate } from 'react-router-dom';
-import { Check, Scale, ArrowLeft } from 'lucide-react';
+import { Check, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const PricingPage = () => {
-  const navigate = useNavigate();
-
-  const handleGetStarted = (plan: string) => {
-    navigate('/auth', { state: { plan } });
-  };
-
-  const handleBack = () => {
-    navigate('/');
-  };
-
   const plans = [
     {
-      name: 'Free',
+      name: 'Free Trial',
       price: '$0',
-      period: '/month',
-      description: '7-day free trial',
+      period: '7 days',
+      description: 'Perfect for trying out our platform',
       features: [
-        'Up to 5 clients',
-        'Basic document storage (1GB)',
-        'Calendar integration',
+        'Up to 3 clients',
+        'Up to 3 documents',
+        'Basic calendar functionality',
         'Email support',
-        'Mobile app access'
       ],
-      limitations: true,
-      buttonText: 'Start Free Trial',
-      popular: false
+      highlighted: false,
     },
     {
-      name: 'Pro',
-      price: '$49',
-      period: '/month',
-      description: 'For growing practices',
+      name: 'Professional',
+      price: '$29',
+      period: 'month',
+      description: 'Great for individual lawyers',
       features: [
-        'Unlimited clients',
-        'Advanced document storage (50GB)',
-        'Priority support',
-        'Advanced reporting',
-        'Custom integrations',
-        'Team collaboration tools'
+        'Up to 6 clients',
+        'Up to 10 documents',
+        'Advanced calendar features',
+        'Priority email support',
+        'Client communication tools',
       ],
-      limitations: false,
-      buttonText: 'Get Started',
-      popular: true
+      highlighted: true,
     },
     {
       name: 'Pro Plus',
-      price: '$99',
-      period: '/month',
-      description: 'Unlimited database',
+      price: '$59',
+      period: 'month',
+      description: 'Perfect for small law firms',
       features: [
-        'Everything in Pro',
-        'Unlimited document storage',
-        'White-label options',
-        'API access',
-        'Advanced security features',
-        'Dedicated account manager',
-        'Custom workflows'
+        'Up to 9 clients',
+        'Up to 20 documents',
+        'Full calendar integration',
+        'Phone & email support',
+        'Advanced client management',
+        'Team collaboration tools',
       ],
-      limitations: false,
-      buttonText: 'Contact Sales',
-      popular: false
-    }
+      highlighted: false,
+    },
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Header */}
-      <header className="bg-white shadow-sm border-b border-gray-200">
-        <nav className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center">
-              <button 
-                onClick={handleBack}
-                className="mr-4 text-gray-600 hover:text-blue-600"
-              >
-                <ArrowLeft className="h-6 w-6" />
-              </button>
-              <Scale className="h-8 w-8 text-blue-600" />
-              <span className="ml-2 text-xl font-bold text-gray-900">LegalTech Pro</span>
-            </div>
-          </div>
-        </nav>
-      </header>
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
+          >
+            Choose Your Plan
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+          >
+            Select the perfect plan for your legal practice. All plans include our core features.
+          </motion.p>
+        </div>
 
-      {/* Pricing Section */}
-      <section className="py-24">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <motion.h1
+        {/* Pricing Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
+          {plans.map((plan, index) => (
+            <motion.div
+              key={plan.name}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              className="text-4xl md:text-5xl font-bold text-gray-900 mb-4"
+              transition={{ delay: index * 0.1 }}
+              className="relative"
             >
-              Choose Your Plan
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: 0.2 }}
-              className="text-xl text-gray-600 max-w-2xl mx-auto"
-            >
-              Select the perfect plan for your legal practice. Start with our free trial 
-              and upgrade as you grow.
-            </motion.p>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            {plans.map((plan, index) => (
-              <motion.div
-                key={plan.name}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                className={`relative bg-white rounded-xl shadow-lg border-2 ${
-                  plan.popular ? 'border-blue-600' : 'border-gray-200'
-                } p-8`}
-              >
-                {plan.popular && (
-                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-600 text-white px-4 py-1 rounded-full text-sm font-medium">
-                      Most Popular
-                    </span>
-                  </div>
-                )}
-
-                <div className="text-center mb-8">
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">{plan.name}</h3>
-                  <div className="flex items-baseline justify-center mb-2">
-                    <span className="text-4xl font-bold text-gray-900">{plan.price}</span>
-                    <span className="text-gray-600 ml-1">{plan.period}</span>
-                  </div>
-                  <p className="text-gray-600">{plan.description}</p>
+              {plan.highlighted && (
+                <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                  <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-medium flex items-center">
+                    <Star className="w-4 h-4 mr-1" />
+                    Most Popular
+                  </span>
                 </div>
-
-                <ul className="space-y-4 mb-8">
-                  {plan.features.map((feature, featureIndex) => (
-                    <li key={featureIndex} className="flex items-start">
-                      <Check className="h-5 w-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
-                      <span className="text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-
-                <button
-                  onClick={() => handleGetStarted(plan.name.toLowerCase())}
-                  className={`w-full py-3 px-4 rounded-lg font-semibold transition-colors ${
-                    plan.popular
-                      ? 'bg-blue-600 text-white hover:bg-blue-700'
-                      : 'bg-gray-100 text-gray-900 hover:bg-gray-200 border border-gray-300'
-                  }`}
-                >
-                  {plan.buttonText}
-                </button>
-
-                {plan.limitations && (
-                  <p className="text-xs text-gray-500 mt-4 text-center">
-                    Limited features during trial period
+              )}
+              <Card className={`h-full transition-all duration-200 hover:shadow-lg ${
+                plan.highlighted 
+                  ? 'border-blue-500 shadow-lg scale-105 bg-white dark:bg-gray-800' 
+                  : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
+              }`}>
+                <CardHeader className="text-center pb-8">
+                  <CardTitle className="text-2xl font-bold text-gray-900 dark:text-white">
+                    {plan.name}
+                  </CardTitle>
+                  <div className="mt-4">
+                    <span className="text-4xl font-bold text-gray-900 dark:text-white">
+                      {plan.price}
+                    </span>
+                    <span className="text-gray-600 dark:text-gray-400">/{plan.period}</span>
+                  </div>
+                  <p className="text-gray-600 dark:text-gray-400 mt-4">
+                    {plan.description}
                   </p>
-                )}
-              </motion.div>
+                </CardHeader>
+                <CardContent className="pt-0">
+                  <ul className="space-y-4 mb-8">
+                    {plan.features.map((feature, featureIndex) => (
+                      <li key={featureIndex} className="flex items-start">
+                        <Check className="w-5 h-5 text-green-500 mr-3 mt-0.5 flex-shrink-0" />
+                        <span className="text-gray-700 dark:text-gray-300">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                  <Button
+                    className={`w-full ${
+                      plan.highlighted
+                        ? 'bg-blue-600 hover:bg-blue-700 text-white'
+                        : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
+                    }`}
+                  >
+                    Get Started
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+
+        {/* Features Grid */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.4 }}
+          className="text-center"
+        >
+          <h2 className="text-3xl font-bold text-gray-900 dark:text-white mb-12">
+            Everything you need to manage your practice
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            {[
+              {
+                title: 'Client Management',
+                description: 'Organize and track all your client information in one place',
+              },
+              {
+                title: 'Document Storage',
+                description: 'Secure cloud storage for all your legal documents',
+              },
+              {
+                title: 'Calendar Integration',
+                description: 'Never miss an important meeting or court date',
+              },
+              {
+                title: 'Case Tracking',
+                description: 'Monitor case progress and important deadlines',
+              },
+            ].map((feature, index) => (
+              <div key={feature.title} className="text-center">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+                  {feature.title}
+                </h3>
+                <p className="text-gray-600 dark:text-gray-400">
+                  {feature.description}
+                </p>
+              </div>
             ))}
           </div>
-
-          <div className="text-center mt-12">
-            <p className="text-gray-600 mb-4">
-              Need a custom solution? We're here to help.
-            </p>
-            <button 
-              onClick={() => handleGetStarted('enterprise')}
-              className="text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Contact our sales team
-            </button>
-          </div>
-        </div>
-      </section>
+        </motion.div>
+      </div>
     </div>
   );
 };
