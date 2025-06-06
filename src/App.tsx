@@ -8,7 +8,6 @@ import { AnimatePresence } from "framer-motion";
 import { AuthProvider, useAuth } from "./hooks/useAuth";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Navbar from "./components/Navbar";
-import Login from "./components/Login";
 import Dashboard from "./components/Dashboard";
 import Cases from "./components/Cases";
 import Calendar from "./components/Calendar";

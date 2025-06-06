@@ -5,11 +5,9 @@ import { Check, Star, ArrowLeft } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
 
 const PricingPage = () => {
   const navigate = useNavigate();
-  const { user } = useAuth();
 
   const plans = [
     {
@@ -56,45 +54,37 @@ const PricingPage = () => {
     },
   ];
 
-  const handleGetStarted = () => {
-    if (user) {
-      navigate('/');
-    } else {
-      navigate('/auth');
-    }
-  };
-
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header with back button */}
-        <div className="mb-8">
+        {/* Header with back buttons */}
+        <div className="mb-8 flex space-x-4">
           <Button
             variant="ghost"
             onClick={() => navigate('/')}
-            className="mb-6 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white"
+            className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white hover:bg-blue-50 dark:hover:bg-blue-900/20"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Home
           </Button>
-          
-          <div className="text-center">
-            <motion.h1
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
-            >
-              Choose Your Plan
-            </motion.h1>
-            <motion.p
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
-            >
-              Select the perfect plan for your legal practice. All plans include our core features.
-            </motion.p>
-          </div>
+        </div>
+        
+        <div className="text-center mb-16">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4"
+          >
+            Choose Your Plan
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl text-gray-600 dark:text-gray-400 max-w-2xl mx-auto"
+          >
+            Select the perfect plan for your legal practice. All plans include our core features.
+          </motion.p>
         </div>
 
         {/* Pricing Cards */}
@@ -115,9 +105,9 @@ const PricingPage = () => {
                   </span>
                 </div>
               )}
-              <Card className={`h-full transition-all duration-200 hover:shadow-lg ${
+              <Card className={`h-full transition-all duration-200 hover:shadow-lg hover:scale-105 hover:border-blue-400 ${
                 plan.highlighted 
-                  ? 'border-blue-500 shadow-lg scale-105 bg-white dark:bg-gray-800' 
+                  ? 'border-blue-500 shadow-lg bg-white dark:bg-gray-800' 
                   : 'bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700'
               }`}>
                 <CardHeader className="text-center pb-8">
@@ -144,7 +134,7 @@ const PricingPage = () => {
                     ))}
                   </ul>
                   <Button
-                    onClick={handleGetStarted}
+                    onClick={() => navigate('/auth')}
                     className={`w-full ${
                       plan.highlighted
                         ? 'bg-blue-600 hover:bg-blue-700 text-white'

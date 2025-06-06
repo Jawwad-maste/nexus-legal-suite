@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useSubscription';
 import LandingPage from './LandingPage';
-import PlanSelectionModal from './PlanSelectionModal';
+import AuthPage from './AuthPage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -26,32 +26,16 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <LandingPage />;
   }
   
-  // If user exists but no profile or no subscription plan, show plan selection
+  // If user exists but no profile or no subscription plan, show auth page with pricing
   if (!userProfile || !userProfile.subscription_plan || userProfile.subscription_plan === null) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
-        <PlanSelectionModal 
-          isOpen={true} 
-          onClose={() => {}} 
-          onPlanSelected={() => window.location.reload()} 
-        />
-      </div>
-    );
+    return <AuthPage />;
   }
   
   // If user has expired trial and no active subscription
   if (userProfile.subscription_plan === 'free_trial' && 
       userProfile.trial_end_date && 
       new Date(userProfile.trial_end_date) < new Date()) {
-    return (
-      <div className="min-h-screen bg-white dark:bg-gray-900">
-        <PlanSelectionModal 
-          isOpen={true} 
-          onClose={() => {}} 
-          onPlanSelected={() => window.location.reload()} 
-        />
-      </div>
-    );
+    return <AuthPage />;
   }
   
   // User has valid subscription, show protected content
