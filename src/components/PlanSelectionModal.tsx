@@ -1,10 +1,12 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { X, Check, CreditCard } from 'lucide-react';
+import { X, Check, CreditCard, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useUpdateSubscription } from '@/hooks/useSubscription';
+import { useAuth } from '@/hooks/useAuth';
 import { toast } from 'sonner';
+import { useNavigate } from 'react-router-dom';
 
 interface PlanSelectionModalProps {
   isOpen: boolean;
@@ -16,6 +18,8 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
   const [selectedPlan, setSelectedPlan] = useState<string | null>(null);
   const [showPayment, setShowPayment] = useState(false);
   const updateSubscription = useUpdateSubscription();
+  const { user } = useAuth();
+  const navigate = useNavigate();
 
   const plans = [
     {
@@ -69,6 +73,13 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
   ];
 
   const handlePlanSelect = async (planId: string) => {
+    if (!user) {
+      toast.error('Please log in to select a plan');
+      navigate('/auth');
+      onClose();
+      return;
+    }
+
     setSelectedPlan(planId);
     
     try {
@@ -93,7 +104,7 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
   const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (!selectedPlan) return;
+    if (!selectedPlan || !user) return;
     
     // Simulate payment processing
     try {
@@ -132,6 +143,24 @@ const PlanSelectionModal = ({ isOpen, onClose, onPlanSelected }: PlanSelectionMo
             <X className="h-6 w-6" />
           </button>
         </div>
+
+        {/* Authentication warning */}
+        {!user && (
+          <div className="p-4 mx-6 mt-6 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2" />
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                You need to be logged in to select a plan. 
+                <button 
+                  onClick={() => navigate('/auth')}
+                  className="ml-1 underline hover:no-underline"
+                >
+                  Click here to log in
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
 
         {!showPayment ? (
           <div className="p-6">

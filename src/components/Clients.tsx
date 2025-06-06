@@ -1,11 +1,12 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Filter, Plus, MoreHorizontal, User, Edit, Trash2, Phone, Mail } from 'lucide-react';
+import { Search, Filter, Plus, MoreHorizontal, User, Edit, Trash2, Phone, Mail, FileText } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { ClientModal } from '@/components/ClientModal';
 import { ClientEditModal } from '@/components/ClientEditModal';
 import { ClientDetailModal } from '@/components/ClientDetailModal';
+import { CaseModal } from '@/components/CaseModal';
 import { useClients } from '@/hooks/useClients';
 import { useClientOperations } from '@/hooks/useClientOperations';
 import { supabase } from '@/integrations/supabase/client';
@@ -14,6 +15,7 @@ import { useQueryClient } from '@tanstack/react-query';
 const Clients = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [isCaseModalOpen, setIsCaseModalOpen] = useState(false);
   const [editingClient, setEditingClient] = useState<any>(null);
   const [selectedClient, setSelectedClient] = useState<string | null>(null);
   const [viewingClient, setViewingClient] = useState<any>(null);
@@ -88,13 +90,22 @@ const Clients = () => {
               <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Clients</h1>
               <p className="text-gray-600 dark:text-gray-400">Manage your client relationships</p>
             </div>
-            <Button
-              onClick={() => setIsCreateModalOpen(true)}
-              className="mt-4 sm:mt-0 bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center space-x-2"
-            >
-              <Plus className="w-5 h-5" />
-              <span>Add Client</span>
-            </Button>
+            <div className="flex space-x-2 mt-4 sm:mt-0">
+              <Button
+                onClick={() => setIsCaseModalOpen(true)}
+                className="bg-green-600 hover:bg-green-700 dark:bg-green-700 dark:hover:bg-green-800 flex items-center space-x-2"
+              >
+                <FileText className="w-5 h-5" />
+                <span>Add Case</span>
+              </Button>
+              <Button
+                onClick={() => setIsCreateModalOpen(true)}
+                className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-700 dark:hover:bg-blue-800 flex items-center space-x-2"
+              >
+                <Plus className="w-5 h-5" />
+                <span>Add Client</span>
+              </Button>
+            </div>
           </div>
         </motion.div>
 
@@ -242,6 +253,11 @@ const Clients = () => {
       <ClientModal
         isOpen={isCreateModalOpen}
         onClose={() => setIsCreateModalOpen(false)}
+      />
+
+      <CaseModal
+        isOpen={isCaseModalOpen}
+        onClose={() => setIsCaseModalOpen(false)}
       />
 
       {editingClient && (
