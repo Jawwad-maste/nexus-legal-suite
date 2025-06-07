@@ -1,9 +1,10 @@
 
 import React from 'react';
-import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Scale, Users, FileText, Calendar, Briefcase, CheckCircle, Star, ArrowRight } from 'lucide-react';
+import { Scale, CheckCircle, Users, FileText, Calendar, Shield, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Link } from 'react-router-dom';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 const LandingPage = () => {
@@ -11,189 +12,221 @@ const LandingPage = () => {
     {
       icon: Users,
       title: 'Client Management',
-      description: 'Organize and track all your clients with detailed profiles and communication history.'
-    },
-    {
-      icon: Briefcase,
-      title: 'Case Tracking',
-      description: 'Monitor case progress, deadlines, and important milestones in one centralized location.'
+      description: 'Comprehensive client database with contact information, case history, and communication tracking.'
     },
     {
       icon: FileText,
-      title: 'Document Storage',
-      description: 'Secure cloud storage for all legal documents with easy search and organization.'
+      title: 'Document Management',
+      description: 'Secure document storage, version control, and easy sharing with clients and team members.'
     },
     {
       icon: Calendar,
       title: 'Calendar Integration',
-      description: 'Schedule appointments, court dates, and deadlines with automated reminders.'
+      description: 'Schedule appointments, court dates, and deadlines with automated reminders and notifications.'
+    },
+    {
+      icon: Shield,
+      title: 'Security & Compliance',
+      description: 'Bank-level security with end-to-end encryption and compliance with legal industry standards.'
     }
   ];
 
   const testimonials = [
     {
       name: 'Sarah Johnson',
-      title: 'Senior Partner, Johnson & Associates',
+      role: 'Partner at Johnson & Associates',
       content: 'LegalTech Pro has transformed how we manage our practice. The efficiency gains are remarkable.',
       rating: 5
     },
     {
       name: 'Michael Chen',
-      title: 'Solo Practitioner',
-      content: 'Finally, a legal management system that is both powerful and easy to use. Highly recommended!',
+      role: 'Solo Practitioner',
+      content: 'As a solo lawyer, this platform gives me the tools I need to compete with larger firms.',
+      rating: 5
+    },
+    {
+      name: 'Emily Rodriguez',
+      role: 'Legal Operations Manager',
+      content: 'The document management and client tracking features have streamlined our entire workflow.',
       rating: 5
     }
   ];
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900">
-      {/* Header */}
-      <nav className="bg-white dark:bg-slate-900 shadow-sm border-b border-gray-200 dark:border-slate-700">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            {/* Logo */}
-            <div className="flex items-center space-x-2">
-              <Scale className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold text-gray-900 dark:text-white">LegalTech Pro</span>
-            </div>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800">
+      {/* Navigation */}
+      <nav className="relative z-10 px-6 py-4">
+        <div className="max-w-7xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-2">
+            <Scale className="h-8 w-8 text-blue-400" />
+            <span className="text-xl font-bold text-white">LegalTech Pro</span>
+          </div>
+          
+          <div className="hidden md:flex items-center space-x-8">
+            <a href="#features" className="text-gray-300 hover:text-white transition-colors">Home</a>
+            <a href="#about" className="text-gray-300 hover:text-white transition-colors">About Us</a>
+            <Link to="/pricing" className="text-gray-300 hover:text-white transition-colors">Pricing</Link>
+          </div>
 
-            {/* Navigation */}
-            <div className="hidden md:flex items-center space-x-8">
-              <a href="#features" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Features</a>
-              <a href="#pricing" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Pricing</a>
-              <a href="#testimonials" className="text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400">Reviews</a>
-              <ThemeToggle />
-              <Link to="/pricing">
-                <Button variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                  Pricing
-                </Button>
-              </Link>
-              <Link to="/auth">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
-
-            {/* Mobile menu button */}
-            <div className="md:hidden flex items-center space-x-2">
-              <ThemeToggle />
-              <Link to="/auth">
-                <Button size="sm" className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Get Started
-                </Button>
-              </Link>
-            </div>
+          <div className="flex items-center space-x-4">
+            <ThemeToggle />
+            <Link to="/auth">
+              <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+                Get Started
+              </Button>
+            </Link>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
-      <section className="bg-gradient-to-br from-blue-50 to-gray-100 dark:from-slate-800 dark:to-slate-900 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center">
-            <motion.h1 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="text-4xl md:text-6xl font-bold text-gray-900 dark:text-white mb-6"
-            >
-              Modern Legal Practice
-              <span className="text-blue-600"> Management</span>
-            </motion.h1>
-            <motion.p 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.1 }}
-              className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
-            >
-              Streamline your legal practice with our comprehensive management platform. 
-              Handle clients, cases, documents, and schedules all in one place.
-            </motion.p>
-            <motion.div 
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: 0.2 }}
-              className="flex flex-col sm:flex-row gap-4 justify-center"
-            >
-              <Link to="/auth">
-                <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white">
-                  Start Free Trial
-                  <ArrowRight className="ml-2 w-5 h-5" />
-                </Button>
-              </Link>
-              <Link to="/pricing">
-                <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-900/20">
-                  View Pricing
-                </Button>
-              </Link>
-            </motion.div>
-          </div>
+      <section className="relative px-6 py-20 text-center">
+        <div className="max-w-4xl mx-auto">
+          <motion.h1
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="text-5xl md:text-6xl font-bold text-white mb-6"
+          >
+            Modern Legal Practice{' '}
+            <span className="text-blue-400">Management</span>
+          </motion.h1>
+          
+          <motion.p
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="text-xl text-gray-300 mb-8 max-w-2xl mx-auto"
+          >
+            Streamline your legal practice with our comprehensive client management, 
+            document organization, and case tracking platform.
+          </motion.p>
+          
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="flex flex-col sm:flex-row gap-4 justify-center items-center"
+          >
+            <Link to="/auth">
+              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3">
+                Get Started
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </Link>
+            <Link to="/pricing">
+              <Button size="lg" variant="outline" className="border-gray-400 text-white hover:bg-gray-800 px-8 py-3">
+                View Pricing
+              </Button>
+            </Link>
+          </motion.div>
+          
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3 }}
+            className="text-gray-400 mt-4"
+          >
+            No credit card required • Start with free trial
+          </motion.p>
         </div>
       </section>
 
       {/* Features Section */}
-      <section id="features" className="py-20 bg-white dark:bg-slate-800">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section id="features" className="px-6 py-20 bg-gray-800/50">
+        <div className="max-w-7xl mx-auto">
           <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Everything You Need to Run Your Practice
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Everything you need to manage your practice
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-3xl mx-auto">
-              Powerful features designed specifically for legal professionals to increase efficiency and client satisfaction.
+            <p className="text-xl text-gray-300 max-w-2xl mx-auto">
+              Powerful tools designed specifically for legal professionals
             </p>
           </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
             {features.map((feature, index) => (
               <motion.div
                 key={feature.title}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="text-center p-6 bg-gray-50 dark:bg-slate-700 rounded-lg hover:shadow-lg transition-all duration-300"
               >
-                <div className="w-16 h-16 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center mx-auto mb-4">
-                  <feature.icon className="w-8 h-8 text-blue-600 dark:text-blue-400" />
-                </div>
-                <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">{feature.title}</h3>
-                <p className="text-gray-600 dark:text-gray-300">{feature.description}</p>
+                <Card className="bg-gray-700/50 border-gray-600 hover:bg-gray-700/70 transition-colors h-full">
+                  <CardContent className="p-6 text-center">
+                    <feature.icon className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold text-white mb-2">
+                      {feature.title}
+                    </h3>
+                    <p className="text-gray-300">
+                      {feature.description}
+                    </p>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Testimonials Section */}
-      <section id="testimonials" className="py-20 bg-gray-50 dark:bg-slate-900">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-16">
-            <h2 className="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
-              Trusted by Legal Professionals
-            </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300">
-              See what our clients say about LegalTech Pro
+      {/* About Section */}
+      <section id="about" className="px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-8">
+            About LegalTech Pro
+          </h2>
+          <div className="text-lg text-gray-300 space-y-6">
+            <p>
+              LegalTech Pro was founded by legal professionals who understand the unique challenges 
+              facing modern law practices. We've experienced firsthand the frustration of juggling 
+              multiple systems, losing track of important documents, and struggling to maintain 
+              client relationships.
+            </p>
+            <p>
+              Our platform brings together all the essential tools you need in one secure, 
+              easy-to-use interface. From solo practitioners to mid-sized firms, we're helping 
+              legal professionals streamline their operations and focus on what they do best - 
+              practicing law.
             </p>
           </div>
+        </div>
+      </section>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+      {/* Testimonials */}
+      <section className="px-6 py-20 bg-gray-800/50">
+        <div className="max-w-6xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+              Trusted by Legal Professionals
+            </h2>
+            <p className="text-xl text-gray-300">
+              See what our clients have to say about their experience
+            </p>
+          </div>
+          
+          <div className="grid md:grid-cols-3 gap-8">
             {testimonials.map((testimonial, index) => (
               <motion.div
                 key={testimonial.name}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: index * 0.1 }}
-                className="bg-white dark:bg-slate-800 p-6 rounded-lg shadow-lg"
               >
-                <div className="flex items-center mb-4">
-                  {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
-                  ))}
-                </div>
-                <p className="text-gray-600 dark:text-gray-300 mb-4 italic">"{testimonial.content}"</p>
-                <div>
-                  <p className="font-semibold text-gray-900 dark:text-white">{testimonial.name}</p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">{testimonial.title}</p>
-                </div>
+                <Card className="bg-gray-700/50 border-gray-600 h-full">
+                  <CardContent className="p-6">
+                    <div className="flex mb-4">
+                      {[...Array(testimonial.rating)].map((_, i) => (
+                        <CheckCircle key={i} className="h-5 w-5 text-yellow-400" />
+                      ))}
+                    </div>
+                    <p className="text-gray-300 mb-4 italic">
+                      "{testimonial.content}"
+                    </p>
+                    <div>
+                      <p className="text-white font-semibold">{testimonial.name}</p>
+                      <p className="text-gray-400 text-sm">{testimonial.role}</p>
+                    </div>
+                  </CardContent>
+                </Card>
               </motion.div>
             ))}
           </div>
@@ -201,56 +234,27 @@ const LandingPage = () => {
       </section>
 
       {/* CTA Section */}
-      <section className="bg-blue-600 dark:bg-blue-700 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+      <section className="px-6 py-20">
+        <div className="max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
-            Ready to Transform Your Practice?
+            Ready to transform your practice?
           </h2>
-          <p className="text-xl text-blue-100 mb-8 max-w-3xl mx-auto">
-            Join thousands of legal professionals who have streamlined their practice with LegalTech Pro.
+          <p className="text-xl text-gray-300 mb-8">
+            Join thousands of legal professionals who trust LegalTech Pro
           </p>
           <Link to="/auth">
-            <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100">
-              Start Your Free Trial Today
-              <ArrowRight className="ml-2 w-5 h-5" />
+            <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3">
+              Start Your Free Trial
+              <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 dark:bg-slate-900 text-white py-12">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-            <div className="col-span-1 md:col-span-2">
-              <div className="flex items-center space-x-2 mb-4">
-                <Scale className="h-8 w-8 text-blue-400" />
-                <span className="text-2xl font-bold">LegalTech Pro</span>
-              </div>
-              <p className="text-gray-400 max-w-md">
-                The most comprehensive legal practice management platform designed to help law firms succeed.
-              </p>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Product</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#features" className="hover:text-white">Features</a></li>
-                <li><a href="#pricing" className="hover:text-white">Pricing</a></li>
-                <li><a href="#" className="hover:text-white">Security</a></li>
-              </ul>
-            </div>
-            <div>
-              <h3 className="text-lg font-semibold mb-4">Company</h3>
-              <ul className="space-y-2 text-gray-400">
-                <li><a href="#" className="hover:text-white">About</a></li>
-                <li><a href="#" className="hover:text-white">Contact</a></li>
-                <li><a href="#" className="hover:text-white">Support</a></li>
-              </ul>
-            </div>
-          </div>
-          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-gray-400">
-            <p>&copy; 2024 LegalTech Pro. All rights reserved.</p>
-          </div>
+      <footer className="px-6 py-8 border-t border-gray-700">
+        <div className="max-w-7xl mx-auto text-center text-gray-400">
+          <p>&copy; 2024 LegalTech Pro. All rights reserved.</p>
         </div>
       </footer>
     </div>

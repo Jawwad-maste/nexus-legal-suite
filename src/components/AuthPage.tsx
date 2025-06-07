@@ -70,12 +70,12 @@ const AuthPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-blue-900 to-gray-800 flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Back to Home */}
         <div className="mb-8">
           <Link to="/">
-            <Button variant="ghost" className="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-white">
+            <Button variant="ghost" className="text-gray-300 hover:text-white hover:bg-gray-700">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back to Home
             </Button>
@@ -85,15 +85,15 @@ const AuthPage = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="bg-white dark:bg-slate-800 rounded-xl p-8 border border-gray-200 dark:border-slate-700 shadow-lg"
+          className="bg-gray-800/50 backdrop-blur-sm rounded-xl p-8 border border-gray-700"
         >
           {/* Logo and Title */}
           <div className="text-center mb-8">
-            <Scale className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">
+            <Scale className="h-12 w-12 text-blue-400 mx-auto mb-4" />
+            <h1 className="text-3xl font-bold text-white mb-2">
               Welcome to LegalTech Pro
             </h1>
-            <p className="text-gray-600 dark:text-gray-300">
+            <p className="text-gray-300">
               Choose your plan and get started with professional legal practice management
             </p>
           </div>
@@ -101,14 +101,14 @@ const AuthPage = () => {
           {/* Auth Form */}
           <div className="space-y-6">
             <div className="text-center">
-              <h2 className="text-2xl font-semibold text-gray-900 dark:text-white mb-2">
+              <h2 className="text-2xl font-semibold text-white mb-2">
                 {isLogin ? 'Sign in to your account' : 'Create your account'}
               </h2>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-gray-400">
                 {isLogin ? "Don't have an account? " : "Already have an account? "}
                 <button
                   onClick={() => setIsLogin(!isLogin)}
-                  className="text-blue-600 hover:text-blue-500 underline"
+                  className="text-blue-400 hover:text-blue-300 underline"
                 >
                   {isLogin ? 'Sign up' : 'Sign in'}
                 </button>
@@ -118,7 +118,7 @@ const AuthPage = () => {
             <form onSubmit={handleSubmit} className="space-y-4">
               {!isLogin && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Full Name
                   </label>
                   <Input
@@ -127,13 +127,13 @@ const AuthPage = () => {
                     onChange={(e) => setFullName(e.target.value)}
                     placeholder="Enter your full name"
                     required={!isLogin}
-                    className="bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                    className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
                   />
                 </div>
               )}
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
                 </label>
                 <Input
@@ -142,12 +142,12 @@ const AuthPage = () => {
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="Enter your email"
                   required
-                  className="bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
+                  className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400"
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                <label className="block text-sm font-medium text-gray-300 mb-2">
                   Password
                 </label>
                 <div className="relative">
@@ -157,12 +157,12 @@ const AuthPage = () => {
                     onChange={(e) => setPassword(e.target.value)}
                     placeholder="Enter your password"
                     required
-                    className="bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white pr-10"
+                    className="bg-gray-700 border-gray-600 text-white placeholder:text-gray-400 pr-10"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-300"
                   >
                     {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
                   </button>

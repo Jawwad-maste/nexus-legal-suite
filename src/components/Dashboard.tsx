@@ -68,7 +68,7 @@ const Dashboard = () => {
       title: 'Add Cases',
       description: 'Create a new case',
       icon: Briefcase,
-      color: 'bg-green-500',
+      color: 'bg-purple-500',
       onClick: () => setIsCaseModalOpen(true),
     },
     {
@@ -117,7 +117,7 @@ const Dashboard = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-slate-800 pt-20 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pt-20 px-4 sm:px-6 lg:px-8">
       <motion.div
         variants={containerVariants}
         initial="hidden"
@@ -127,17 +127,17 @@ const Dashboard = () => {
         {/* Header */}
         <motion.div variants={itemVariants} className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Dashboard</h1>
-          <p className="text-gray-600 dark:text-gray-300">Welcome back! Here's what's happening with your practice.</p>
+          <p className="text-gray-600 dark:text-gray-400">Welcome back! Here's what's happening with your practice.</p>
         </motion.div>
 
         {/* Stats Grid */}
         <motion.div variants={itemVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           {stats.map((stat, index) => (
-            <Card key={stat.title} className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
+            <Card key={stat.title} className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
               <CardContent className="p-6">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm font-medium text-gray-600 dark:text-gray-300">{stat.title}</p>
+                    <p className="text-sm font-medium text-gray-600 dark:text-gray-400">{stat.title}</p>
                     <p className="text-2xl font-bold text-gray-900 dark:text-white">{stat.value}</p>
                   </div>
                   <div className={`p-3 rounded-full ${stat.color} text-white`}>
@@ -157,7 +157,7 @@ const Dashboard = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Quick Actions */}
           <motion.div variants={itemVariants} className="lg:col-span-2">
-            <Card className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
+            <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Quick Actions</CardTitle>
               </CardHeader>
@@ -168,7 +168,7 @@ const Dashboard = () => {
                       key={action.title}
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      className="p-4 border border-gray-200 dark:border-slate-600 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200 bg-gray-50 dark:bg-slate-800"
+                      className="p-4 border border-gray-200 dark:border-gray-600 rounded-lg cursor-pointer hover:shadow-md transition-all duration-200 bg-gray-50 dark:bg-gray-700"
                       onClick={action.onClick}
                     >
                       <div className="flex items-center space-x-3">
@@ -177,7 +177,7 @@ const Dashboard = () => {
                         </div>
                         <div>
                           <h3 className="font-medium text-gray-900 dark:text-white">{action.title}</h3>
-                          <p className="text-sm text-gray-600 dark:text-gray-300">{action.description}</p>
+                          <p className="text-sm text-gray-600 dark:text-gray-400">{action.description}</p>
                         </div>
                       </div>
                     </motion.div>
@@ -189,7 +189,7 @@ const Dashboard = () => {
 
           {/* Recent Activity */}
           <motion.div variants={itemVariants}>
-            <Card className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
+            <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Recent Activity</CardTitle>
               </CardHeader>
@@ -216,7 +216,7 @@ const Dashboard = () => {
         {/* Upcoming Events & Tasks */}
         <motion.div variants={itemVariants} className="mt-8">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <Card className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
+            <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Upcoming Events</CardTitle>
               </CardHeader>
@@ -225,14 +225,14 @@ const Dashboard = () => {
                   <div className="flex items-center justify-between p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">Client Meeting</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Today at 2:00 PM</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Today at 2:00 PM</p>
                     </div>
                     <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                   </div>
                   <div className="flex items-center justify-between p-3 bg-orange-50 dark:bg-orange-900/20 rounded-lg">
                     <div>
                       <p className="font-medium text-gray-900 dark:text-white">Court Hearing</p>
-                      <p className="text-sm text-gray-600 dark:text-gray-300">Tomorrow at 10:00 AM</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Tomorrow at 10:00 AM</p>
                     </div>
                     <AlertCircle className="w-5 h-5 text-orange-600 dark:text-orange-400" />
                   </div>
@@ -240,7 +240,7 @@ const Dashboard = () => {
               </CardContent>
             </Card>
 
-            <Card className="bg-white dark:bg-slate-700 border border-gray-200 dark:border-slate-600">
+            <Card className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
               <CardHeader>
                 <CardTitle className="text-xl font-semibold text-gray-900 dark:text-white">Pending Tasks</CardTitle>
               </CardHeader>
