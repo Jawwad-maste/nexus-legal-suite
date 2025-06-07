@@ -114,24 +114,24 @@ const Cases = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-white dark:bg-gray-900 pt-16">
+      <div className="min-h-screen bg-gray-50 dark:bg-slate-800 pt-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="text-center">Loading cases...</div>
+          <div className="text-center text-gray-900 dark:text-white">Loading cases...</div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-gray-900 pt-16">
+    <div className="min-h-screen bg-gray-50 dark:bg-slate-800 pt-16">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-2">Cases</h1>
-            <p className="text-gray-600 dark:text-gray-400">Manage and track all your legal cases</p>
+            <p className="text-gray-600 dark:text-gray-300">Manage and track all your legal cases</p>
           </div>
-          <Button onClick={() => setIsModalOpen(true)} className="mt-4 sm:mt-0">
+          <Button onClick={() => setIsModalOpen(true)} className="mt-4 sm:mt-0 bg-green-600 hover:bg-green-700 text-white">
             <Plus className="w-4 h-4 mr-2" />
             New Case
           </Button>
@@ -145,13 +145,13 @@ const Cases = () => {
               placeholder="Search cases..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-10 bg-white dark:bg-slate-700 border-gray-300 dark:border-slate-600 text-gray-900 dark:text-white"
             />
           </div>
           <select
             value={statusFilter}
             onChange={(e) => setStatusFilter(e.target.value)}
-            className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-md bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
+            className="px-3 py-2 border border-gray-300 dark:border-slate-600 rounded-md bg-white dark:bg-slate-700 text-gray-900 dark:text-white"
           >
             <option value="all">All Status</option>
             <option value="Active">Active</option>
@@ -166,7 +166,7 @@ const Cases = () => {
         {filteredCases.length === 0 ? (
           <div className="text-center py-12">
             <div className="text-gray-500 dark:text-gray-400 mb-4">No cases found</div>
-            <Button onClick={() => setIsModalOpen(true)}>
+            <Button onClick={() => setIsModalOpen(true)} className="bg-green-600 hover:bg-green-700 text-white">
               <Plus className="w-4 h-4 mr-2" />
               Create Your First Case
             </Button>
@@ -180,14 +180,14 @@ const Cases = () => {
                 animate={{ opacity: 1, y: 0 }}
                 className="group"
               >
-                <Card className="h-full hover:shadow-lg transition-shadow duration-200">
+                <Card className="h-full hover:shadow-lg transition-shadow duration-200 bg-white dark:bg-slate-700 border-gray-200 dark:border-slate-600">
                   <CardHeader className="pb-3">
                     <div className="flex justify-between items-start mb-2">
                       <CardTitle className="text-lg font-semibold text-gray-900 dark:text-white line-clamp-2">
                         {caseItem.title}
                       </CardTitle>
                       <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0 text-gray-600 dark:text-gray-300">
                           <Edit className="w-4 h-4" />
                         </Button>
                         <Button 
@@ -210,7 +210,7 @@ const Cases = () => {
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
+                    <p className="text-gray-600 dark:text-gray-300 text-sm mb-4 line-clamp-3">
                       {caseItem.description}
                     </p>
                     <div className="space-y-2 text-sm">
