@@ -3,7 +3,7 @@ import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfile } from '@/hooks/useSubscription';
 import LandingPage from './LandingPage';
-import PricingPage from './PricingPage';
+import AuthPage from './AuthPage';
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -26,16 +26,16 @@ const ProtectedRoute = ({ children }: ProtectedRouteProps) => {
     return <LandingPage />;
   }
   
-  // If user exists but no profile or no subscription plan, show pricing page with auth
+  // If user exists but no profile or no subscription plan, show auth page with pricing
   if (!userProfile || !userProfile.subscription_plan || userProfile.subscription_plan === null) {
-    return <PricingPage />;
+    return <AuthPage />;
   }
   
   // If user has expired trial and no active subscription
   if (userProfile.subscription_plan === 'free_trial' && 
       userProfile.trial_end_date && 
       new Date(userProfile.trial_end_date) < new Date()) {
-    return <PricingPage />;
+    return <AuthPage />;
   }
   
   // User has valid subscription, show protected content

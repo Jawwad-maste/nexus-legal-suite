@@ -17,6 +17,7 @@ import ClientDetail from "./components/ClientDetail";
 import ClientDocuments from "./components/ClientDocuments";
 import LandingPage from "./components/LandingPage";
 import PricingPage from "./components/PricingPage";
+import AuthPage from "./components/AuthPage";
 import NotFound from "./pages/NotFound";
 import ProtectedRoute from "./components/ProtectedRoute";
 
@@ -36,7 +37,7 @@ const AppContent = () => {
   }
 
   // Public routes that don't require authentication
-  const isPublicRoute = ['/pricing'].includes(location.pathname);
+  const isPublicRoute = ['/pricing', '/auth'].includes(location.pathname);
   const isRootRoute = location.pathname === '/';
 
   // If user is not authenticated and trying to access protected routes
@@ -53,6 +54,7 @@ const AppContent = () => {
         <Routes location={location} key={location.pathname}>
           {/* Public routes */}
           <Route path="/pricing" element={<PricingPage />} />
+          <Route path="/auth" element={<AuthPage />} />
           
           {/* Protected routes - now using ProtectedRoute wrapper */}
           <Route path="/" element={
