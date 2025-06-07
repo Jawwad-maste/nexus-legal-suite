@@ -1,16 +1,22 @@
 
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Check, Star, ArrowLeft } from 'lucide-react';
+import { Check, Star, ArrowLeft, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
+import { useUpdateSubscription } from '@/hooks/useSubscription';
+import { toast } from 'sonner';
 
 const PricingPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
+  const updateSubscription = useUpdateSubscription();
 
   const plans = [
     {
+      id: 'free_trial',
       name: 'Free Trial',
       price: '$0',
       period: '7 days',
@@ -24,6 +30,7 @@ const PricingPage = () => {
       highlighted: false,
     },
     {
+      id: 'pro',
       name: 'Professional',
       price: '$29',
       period: 'month',
@@ -38,6 +45,7 @@ const PricingPage = () => {
       highlighted: true,
     },
     {
+      id: 'pro_plus',
       name: 'Pro Plus',
       price: '$59',
       period: 'month',
@@ -54,6 +62,31 @@ const PricingPage = () => {
     },
   ];
 
+  const handlePlanSelect = async (planId: string) => {
+    if (!user) {
+      toast.error('Please log in to select a plan');
+      navigate('/auth');
+      return;
+    }
+
+    try {
+      await updateSubscription.mutateAsync({ 
+        plan: planId as 'free_trial' | 'pro' | 'pro_plus'
+      });
+      
+      if (planId === 'free_trial') {
+        toast.success('Free trial started successfully!');
+      } else {
+        toast.success(`${planId.toUpperCase()} plan activated successfully!`);
+      }
+      
+      navigate('/');
+    } catch (error: any) {
+      console.error('Error updating subscription:', error);
+      toast.error(`Failed to activate ${planId} plan: ${error.message}`);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-7xl mx-auto">
@@ -68,6 +101,24 @@ const PricingPage = () => {
             Back to Home
           </Button>
         </div>
+
+        {/* Authentication warning */}
+        {!user && (
+          <div className="mb-8 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+            <div className="flex items-center">
+              <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400 mr-2" />
+              <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                You need to be logged in to select a plan. 
+                <button 
+                  onClick={() => navigate('/auth')}
+                  className="ml-1 underline hover:no-underline font-medium"
+                >
+                  Click here to log in
+                </button>
+              </p>
+            </div>
+          </div>
+        )}
         
         <div className="text-center mb-16">
           <motion.h1
@@ -134,14 +185,15 @@ const PricingPage = () => {
                     ))}
                   </ul>
                   <Button
-                    onClick={() => navigate('/auth')}
+                    onClick={() => handlePlanSelect(plan.id)}
+                    disabled={updateSubscription.isPending}
                     className={`w-full ${
                       plan.highlighted
                         ? 'bg-blue-600 hover:bg-blue-700 text-white'
                         : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-900 dark:text-white'
                     }`}
                   >
-                    Get Started
+                    {updateSubscription.isPending ? 'Processing...' : 'Get Started'}
                   </Button>
                 </CardContent>
               </Card>
